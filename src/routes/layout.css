@@ -1,0 +1,59 @@
+@import 'tailwindcss';
+@plugin '@tailwindcss/forms';
+@plugin '@tailwindcss/typography';
+
+:root {
+	--ground: #f3f4f6;
+	--surface: #ffffff;
+	--rail: #eceef1;
+	--ink: #1c2430;
+	--ink-soft: #5b6472;
+	--ink-faint: #8991a0;
+	--accent: #3f6b4a;
+	--accent-tint: #e2ece4;
+	--line: #dde1e6;
+	--shadow: 0 1px 2px rgba(28, 36, 48, 0.05), 0 10px 26px -16px rgba(28, 36, 48, 0.18);
+}
+
+@media (prefers-color-scheme: dark) {
+	:root:not([data-theme='light']) {
+		--ground: #10141a;
+		--surface: #161c24;
+		--rail: #12171e;
+		--ink: #e4e8ee;
+		--ink-soft: #a1aab8;
+		--ink-faint: #6d7684;
+		--accent: #6fae82;
+		--accent-tint: #17281c;
+		--line: #262d38;
+		--shadow: 0 1px 2px rgba(0, 0, 0, 0.4), 0 14px 32px -18px rgba(0, 0, 0, 0.7);
+	}
+}
+
+:root[data-theme='dark'] {
+	--ground: #10141a;
+	--surface: #161c24;
+	--rail: #12171e;
+	--ink: #e4e8ee;
+	--ink-soft: #a1aab8;
+	--ink-faint: #6d7684;
+	--accent: #6fae82;
+	--accent-tint: #17281c;
+	--line: #262d38;
+	--shadow: 0 1px 2px rgba(0, 0, 0, 0.4), 0 14px 32px -18px rgba(0, 0, 0, 0.7);
+}
+
+* {
+	box-sizing: border-box;
+}
+
+body {
+	background: var(--ground);
+	color: var(--ink);
+	font-family: 'Libre Franklin', ui-sans-serif, system-ui, sans-serif;
+	margin: 0;
+}
+
+.mono {
+	font-family: 'Space Mono', ui-monospace, monospace;
+}

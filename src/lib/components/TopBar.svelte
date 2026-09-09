@@ -1,6 +1,5 @@
 <a class="topbar" href="/">
   <span class="wordmark">TAOCP Companion</span>
-  <span class="topbar-search">search — coming soon</span>
 </a>
 
 <style>
@@ -24,13 +23,5 @@
     font-weight: 700;
     font-size: 0.98rem;
     color: var(--ink);
-  }
-  .topbar-search {
-    font-family: "Space Mono", ui-monospace, monospace;
-    font-size: 0.78rem;
-    color: var(--ink-faint);
-    border: 1px solid var(--line);
-    border-radius: 6px;
-    padding: 6px 10px;
   }
 </style>

@@ -29,34 +29,17 @@ export const toc: TocVolume[] = [
   {
     id: "vol-1",
     number: "I",
-    title: "Example Volume",
+    title: "Fundamental Algorithms",
     slug: "vol-1",
     chapters: [
       {
         id: "ch-1",
         number: "1",
-        title: "Example Chapter",
+        title: "Basic Concepts",
         slug: "ch-1",
-        sections: [
-          { id: "1-1", number: "1.1", title: "Example Section", slug: "1-1" },
-          { id: "1-2", number: "1.2", title: "Another Example Section", slug: "1-2" },
-        ],
-      },
-      {
-        id: "ch-2",
-        number: "2",
-        title: "Second Example Chapter",
-        slug: "ch-2",
-        sections: [],
+        sections: [{ id: "1-1", number: "1.1", title: "Algorithms", slug: "1-1" }],
       },
     ],
-  },
-  {
-    id: "vol-2",
-    number: "II",
-    title: "Second Example Volume",
-    slug: "vol-2",
-    chapters: [],
   },
 ]
 

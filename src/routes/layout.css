@@ -12,6 +12,7 @@
   --accent: #3f6b4a;
   --accent-tint: #e2ece4;
   --line: #dde1e6;
+  --danger: #b3261e;
   --shadow: 0 1px 2px rgba(28, 36, 48, 0.05), 0 10px 26px -16px rgba(28, 36, 48, 0.18);
 }
 
@@ -26,6 +27,7 @@
     --accent: #6fae82;
     --accent-tint: #17281c;
     --line: #262d38;
+    --danger: #f2b8b5;
     --shadow: 0 1px 2px rgba(0, 0, 0, 0.4), 0 14px 32px -18px rgba(0, 0, 0, 0.7);
   }
 }
@@ -40,6 +42,7 @@
   --accent: #6fae82;
   --accent-tint: #17281c;
   --line: #262d38;
+  --danger: #f2b8b5;
   --shadow: 0 1px 2px rgba(0, 0, 0, 0.4), 0 14px 32px -18px rgba(0, 0, 0, 0.7);
 }
 
@@ -56,4 +59,126 @@ body {
 
 .mono {
   font-family: "Space Mono", ui-monospace, monospace;
+}
+
+/* Content typography.
+   Tailwind's preflight zeroes every margin and flattens h1-h6 to inherit the
+   body size, so prose defaults have to be restored here. Scoped to main so the
+   nav, rail and breadcrumb keep their own scale. */
+
+main p {
+  margin: 0 0 1.15em;
+  line-height: 1.7;
+  max-width: 68ch;
+}
+
+main h2,
+main h3,
+main h4 {
+  font-family: "Spectral", Georgia, serif;
+  font-weight: 600;
+  line-height: 1.25;
+  margin: 2em 0 0.6em;
+  text-wrap: balance;
+}
+main h2 {
+  font-size: 1.5rem;
+}
+main h3 {
+  font-size: 1.2rem;
+}
+main h4 {
+  font-size: 1.02rem;
+}
+
+main ul,
+main ol {
+  margin: 0 0 1.15em;
+  padding-left: 1.4em;
+  max-width: 68ch;
+  line-height: 1.7;
+}
+main ul {
+  list-style: disc;
+}
+main ol {
+  list-style: decimal;
+}
+main li {
+  margin-bottom: 0.35em;
+}
+
+main :not(pre) > code {
+  font-family: "Space Mono", ui-monospace, monospace;
+  font-size: 0.88em;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: 4px;
+  padding: 0.1em 0.35em;
+}
+
+main table {
+  margin: 0 0 1.4em;
+  border-collapse: collapse;
+  font-variant-numeric: tabular-nums;
+}
+
+main th,
+main td {
+  padding: 9px 14px;
+  text-align: left;
+  vertical-align: baseline;
+  border-bottom: 1px solid var(--line);
+}
+
+main thead th {
+  font-family: "Libre Franklin", ui-sans-serif, system-ui, sans-serif;
+  font-size: 0.72rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--ink-faint);
+}
+
+main tbody tr:last-child td {
+  border-bottom: none;
+}
+
+/* Marks the cell holding the answer a worked example arrives at, so the
+   result stands out from the intermediate steps above it. */
+main td.result {
+  background: var(--accent);
+  color: var(--ground);
+  font-weight: 700;
+}
+
+/* Form controls.
+   @tailwindcss/forms hard-codes a white background, which leaves near-white
+   text unreadable in dark mode, and sizes inputs for standalone forms rather
+   than inline use. */
+
+input[type="number"],
+input[type="text"],
+select,
+textarea {
+  background: var(--surface);
+  color: var(--ink);
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  padding: 3px 7px;
+  font-size: 0.9rem;
+  line-height: 1.45;
+}
+
+input[type="number"] {
+  width: 9ch;
+  font-variant-numeric: tabular-nums;
+}
+
+input:focus-visible,
+select:focus-visible,
+textarea:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 1px;
+  border-color: var(--accent);
 }

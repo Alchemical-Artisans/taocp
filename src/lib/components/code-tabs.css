@@ -1,0 +1,81 @@
+/* Syntax highlighting palette for CodeTabs.
+   highlight.js output is injected as raw HTML, so these classes can't be reached
+   by Svelte's scoped styles and live here instead. Hues are picked to sit beside
+   the --accent green of the surrounding chrome rather than a stock hljs theme. */
+
+:root {
+  --code-comment: #7c8796;
+  --code-keyword: #8250a8;
+  --code-string: #3f6b4a;
+  --code-number: #9a5b1e;
+  --code-function: #2c5f9e;
+  --code-type: #1f6f6a;
+  --code-punct: #5b6472;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --code-comment: #6d7684;
+    --code-keyword: #c8a2e8;
+    --code-string: #8fd0a2;
+    --code-number: #e0b070;
+    --code-function: #86b6e8;
+    --code-type: #6fc7c0;
+    --code-punct: #a1aab8;
+  }
+}
+
+:root[data-theme="dark"] {
+  --code-comment: #6d7684;
+  --code-keyword: #c8a2e8;
+  --code-string: #8fd0a2;
+  --code-number: #e0b070;
+  --code-function: #86b6e8;
+  --code-type: #6fc7c0;
+  --code-punct: #a1aab8;
+}
+
+.hljs-comment,
+.hljs-quote {
+  color: var(--code-comment);
+  font-style: italic;
+}
+
+.hljs-keyword,
+.hljs-literal,
+.hljs-meta {
+  color: var(--code-keyword);
+}
+
+.hljs-string,
+.hljs-regexp,
+.hljs-template-variable,
+.hljs-subst {
+  color: var(--code-string);
+}
+
+.hljs-number,
+.hljs-symbol {
+  color: var(--code-number);
+}
+
+.hljs-title,
+.hljs-title.function_,
+.hljs-title.class_,
+.hljs-section {
+  color: var(--code-function);
+}
+
+.hljs-type,
+.hljs-built_in,
+.hljs-attr,
+.hljs-property,
+.hljs-variable.language_,
+.hljs-params {
+  color: var(--code-type);
+}
+
+.hljs-punctuation,
+.hljs-operator {
+  color: var(--code-punct);
+}

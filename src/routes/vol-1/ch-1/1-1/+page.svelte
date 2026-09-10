@@ -1,24 +1,29 @@
 <script lang="ts">
- let m: number | null = $state(119)
- let n: number | null = $state(544)
+  import CodeTabs from "$lib/components/CodeTabs.svelte"
+  import faithfulSource from "$lib/algorithms/euclid/faithful.ts?raw"
+  import idiomaticSource from "$lib/algorithms/euclid/idiomatic.ts?raw"
 
- const rows = $derived(isPositiveInteger(m) && isPositiveInteger(n) ? euclid(m, n) : null)
+  let m: number | null = $state(119)
+  let n: number | null = $state(544)
 
- function isPositiveInteger(value: number | null): value is number {
-   return value !== null && Number.isInteger(value) && value > 0
- }
+  const rows = $derived(isPositiveInteger(m) && isPositiveInteger(n) ? euclid(m, n) : null)
+  const r = $derived((m ?? 0) % (n ?? 0))
 
- function euclid(m: number, n: number) {
-   const values: [number, number, number][] = []
+  function isPositiveInteger(value: number | null): value is number {
+    return value !== null && Number.isInteger(value) && value > 0
+  }
 
-   while (true) {
-     let r = m % n
-     if (r == 0) return values
-     m = n
-     n = r
-     values.push([m, n, m % n])
-   }
- }
+  function euclid(m: number, n: number) {
+    const values: [number, number, number][] = []
+
+    while (true) {
+      let r = m % n
+      if (r == 0) return values
+      m = n
+      n = r
+      values.push([m, n, m % n])
+    }
+  }
 </script>
 
 <h2>Euclid's Algorithm</h2>
@@ -41,8 +46,8 @@
   <tbody>
     <tr>
       <td><input name="m" type="number" bind:value={m} /></td>
-      <td class:result={m && n && m % n == 0}><input name="n" type="number" bind:value={n} /></td>
-      <td>&nbsp;</td>
+      <td class:result={r == 0}><input name="n" type="number" bind:value={n} /></td>
+      <td>{Number.isNaN(r) ? "" : r}</td>
     </tr>
     {#if rows}
       {#each rows as [sm, sn, sr], i (sm)}
@@ -60,7 +65,27 @@
   </tbody>
 </table>
 
+<h2>Implementation</h2>
+
+<CodeTabs {faithful} {idiomatic} />
+
+<!-- Rendered from the modules the unit tests import, so the page can't drift
+     from the code that is actually verified. -->
+{#snippet faithful()}{faithfulSource}{/snippet}
+{#snippet idiomatic()}{idiomaticSource}{/snippet}
+
 <style>
+  table {
+    width: 100%;
+    max-width: 26rem;
+    table-layout: fixed;
+  }
+
+  input {
+    width: 100%;
+    box-sizing: border-box;
+  }
+
   .validation-error {
     color: var(--danger);
     font-style: italic;

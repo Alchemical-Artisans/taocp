@@ -1,5 +1,6 @@
 <script lang="ts">
   import type { Snippet } from "svelte"
+  import { highlight } from "./highlight.svelte"
 
   type Props = {
     /**
@@ -13,9 +14,17 @@
      * drawing nothing.
      */
     children?: Snippet
+    /**
+     * Letter of the algorithm this diagram draws. Setting it links every node
+     * named for one of that algorithm's steps — `F1`, `F2` — to the matching
+     * line of prose, in both directions.
+     */
+    algorithm?: string
   }
 
-  let { chart, children }: Props = $props()
+  let { chart, children, algorithm }: Props = $props()
+
+  let figure: HTMLElement | undefined = $state()
 
   let svg = $state("")
   let failure = $state("")
@@ -94,6 +103,39 @@
     })()
   })
 
+  /* Mermaid renders to a string, so the nodes only exist once that string is in
+     the document; keying off `svg` reattaches these after every redraw. */
+  $effect(() => {
+    if (!svg || !algorithm) return
+
+    const listening = nodes().map(({ node, step }) => {
+      const enter = () => highlight.hoverStep(step)
+      const leave = () => highlight.hoverStep(null)
+      node.addEventListener("mouseenter", enter)
+      node.addEventListener("mouseleave", leave)
+      return () => {
+        node.removeEventListener("mouseenter", enter)
+        node.removeEventListener("mouseleave", leave)
+      }
+    })
+
+    return () => listening.forEach((stop) => stop())
+  })
+
+  $effect(() => {
+    if (!svg || !algorithm) return
+    const lit = highlight.step
+    for (const { node, step } of nodes()) node.classList.toggle("lit", step === lit)
+  })
+
+  /* Mermaid names a node `mermaid-<render>-flowchart-<id>-<index>`, and the id
+     in the middle is what the diagram source called it. */
+  function nodes(): { node: Element; step: string }[] {
+    return [...(figure?.querySelectorAll("g.node") ?? [])]
+      .map((node) => ({ node, step: node.id.match(/-flowchart-(.+)-\d+$/)?.[1] ?? "" }))
+      .filter(({ step }) => step.startsWith(algorithm ?? "\u0000"))
+  }
+
   /* Mermaid picks its own palette, which would sit oddly against the page in
      either theme, so hand it the site's colours.
 
@@ -113,6 +155,10 @@
       tertiaryColor: "--surface",
       lineColor: "--ink-soft",
       textColor: "--ink",
+      /* Edge labels are painted on an opaque box so the edge does not run
+         through them; it has to be the page behind the figure, not the
+         diagram surface, or it shows as a pale patch on the line. */
+      edgeLabelBackground: "--ground",
     }
 
     return Object.fromEntries(
@@ -123,7 +169,7 @@
   }
 </script>
 
-<figure class="mermaid">
+<figure class="mermaid" bind:this={figure}>
   {#if svg}
     <!-- eslint-disable-next-line svelte/no-at-html-tags -- Mermaid's own output. -->
     {@html svg}
@@ -147,6 +193,27 @@
   .mermaid :global(svg) {
     max-width: 100%;
     height: auto;
+  }
+
+  /* Mermaid lays a node label out as a flex row, which collapses the space
+     between a word and an adjacent $$…$$ expression: the text node loses its
+     trailing space at the flex-item boundary and KaTeX renders as a block with
+     no margin. Give the maths a little room back. */
+  .mermaid :global(.nodeLabel .katex),
+  .mermaid :global(.edgeLabel .katex) {
+    margin: 0 0.16em;
+  }
+
+  /* Mermaid draws a node's shape as a rect, a path or a polygon depending on
+     the node type, so the lit outline has to reach all three.
+
+     !important because Mermaid injects its own stylesheet into the SVG keyed on
+     the render's id, and an id selector outranks anything written here. */
+  .mermaid :global(g.node.lit rect),
+  .mermaid :global(g.node.lit path),
+  .mermaid :global(g.node.lit polygon) {
+    stroke: var(--accent) !important;
+    stroke-width: 3px !important;
   }
 
   .source {

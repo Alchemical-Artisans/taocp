@@ -4,6 +4,8 @@
   import faithfulSource from "$lib/algorithms/euclid/faithful.ts?raw"
   import idiomaticSource from "$lib/algorithms/euclid/idiomatic.ts?raw"
   import Mermaid from "$lib/components/Mermaid.svelte"
+  import Algorithm from "$lib/components/Algorithm.svelte"
+  import Step from "$lib/components/Step.svelte"
 
   let m: number | null = $state(119)
   let n: number | null = $state(544)
@@ -67,20 +69,21 @@
 
 <h2>Algorithm Structure</h2>
 
-<p>
-  <b>Algorithm F</b> (Factorial). Given a positive integer $n$, find the <i>factorial</i> of $n$, that
-  is, the product of all numbers $1, 2, \ldots, n$.
-</p>
+<Algorithm letter="F" name="Factorial">
+  {#snippet intro()}
+    Given a positive integer $n$, find the <i>factorial</i> of $n$, that is, the product of all numbers
+    $1, 2, \ldots, n$.
+  {/snippet}
 
-<ul>
-  <li><b>F1.</b> [Initialize $f$.] Set $f \leftarrow n$.</li>
-  <li><b>F2.</b> [Is it 1?] If $n = 1$, the algorithm terminates; $f$ is the answer.</li>
-  <li>
-    <b>F3.</b> [Reduce.] Set $n \leftarrow n - 1$, $f \leftarrow f \cdot n$, and go back to step F2.
-  </li>
-</ul>
+  <Step n={1}>[Initialize f.] Set $f \leftarrow n$.</Step>
+  <Step n={2}>[Is it 1?] If $n = 1$, the algorithm terminates; $f$ is the answer.</Step>
+  <Step n={3}
+    >[Reduce.] Set $n \leftarrow n - 1$, $f \leftarrow f \cdot n$, and go back to step F2.</Step
+  >
+</Algorithm>
 
 <Mermaid
+  algorithm="F"
   chart={`
         flowchart LR
         F1[F1. Initialize $$f$$.]
@@ -90,15 +93,6 @@
         F2 -- Yes --> Result
         `}
 />
-
-<h3>TODO</h3>
-
-<ul>
-  <li>Hovering on letter highlights step letters and algorithm letter</li>
-  <li>MathJax in node names</li>
-  <li>Hover on node highlights algorithm line</li>
-  <li>Line text background doesn't match site background</li>
-</ul>
 
 <style>
   table {

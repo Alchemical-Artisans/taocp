@@ -1,3 +1,7 @@
+<script lang="ts">
+  import Spoiler from "$lib/components/Spoiler.svelte"
+</script>
+
 <section class="home">
   <h1>Understanding The Art of Computer Programming</h1>
 
@@ -54,6 +58,20 @@
     book and one that's more idiomatic to the language. It will still have the same performance
     characteristics, but this should allow you to see how to adapt the ideas from the book in a
     modern codebase.
+  </p>
+
+  <h2>Problems and Solutions</h2>
+
+  <p>
+    It's not always clear what Knuth is asking for in the questions at the end of each section,
+    which can be cleared up by looking at the solution. In those cases, I've provided clarification
+    so you can attempt the problem without having glimpsed where you're going.
+  </p>
+
+  <p>
+    When a solution is difficult to follow, I've also provided further explanation. This will be
+    marked as a <Spoiler inline>spoiler</Spoiler>, though, to protect you from seeing it
+    accidentally.
   </p>
 
   <h2>Errors</h2>

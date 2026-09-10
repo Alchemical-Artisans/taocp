@@ -31,7 +31,7 @@
       <div class="breadcrumb">
         <a href="/">Home</a>
         <span>›</span>
-        <span>Vol. {current.volume.number} — {current.volume.title}</span>
+        <span>Vol. {current.volume.number}</span>
         {#if current.chapter}
           <span>›</span>
           {#if current.chapter.sections.length === 0}

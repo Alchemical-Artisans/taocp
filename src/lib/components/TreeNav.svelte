@@ -45,11 +45,10 @@
                 href={chapterHref(volume, chapter)}
                 class:active={current?.chapter?.id === chapter.id}
               >
-                Ch. {chapter.number}
-                {chapter.title}
+                Ch. {chapter.number} — {chapter.title}
               </a>
             {:else}
-              <span>Ch. {chapter.number} {chapter.title}</span>
+              <span>Ch. {chapter.number} — {chapter.title}</span>
             {/if}
           </div>
           {#if chapter.sections.length}

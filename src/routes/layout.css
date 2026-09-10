@@ -182,3 +182,29 @@ textarea:focus-visible {
   outline-offset: 1px;
   border-color: var(--accent);
 }
+
+/* MathJax SVG, typeset at build time by src/lib/tex. The glyphs are filled with
+   currentColor, so math picks up the surrounding text colour in both themes. */
+mjx-container[jax="SVG"] {
+  display: inline-block;
+  direction: ltr;
+  line-height: 0;
+}
+
+/* Tailwind's preflight makes every svg a block, which would break inline math
+   onto its own line. */
+mjx-container[jax="SVG"] > svg {
+  display: inline-block;
+  overflow: visible;
+  min-height: 1px;
+  min-width: 1px;
+}
+
+mjx-container[jax="SVG"][display="true"] {
+  display: block;
+  margin: 1.15em 0;
+  text-align: center;
+  /* Long derivations scroll instead of widening the page on a phone. */
+  overflow-x: auto;
+  overflow-y: hidden;
+}

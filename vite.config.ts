@@ -7,6 +7,7 @@ import { sveltekit } from "@sveltejs/kit/vite"
 import path from "node:path"
 import { fileURLToPath } from "node:url"
 import { storybookTest } from "@storybook/addon-vitest/vitest-plugin"
+import { tex } from "./src/lib/tex/preprocess.ts"
 const dirname =
   typeof __dirname !== "undefined" ? __dirname : path.dirname(fileURLToPath(import.meta.url))
 
@@ -15,6 +16,9 @@ export default defineConfig({
   plugins: [
     tailwindcss(),
     sveltekit({
+      // Typesets $...$ and $$...$$ with MathJax at build time, so no MathJax
+      // runtime reaches the browser. See src/lib/tex/README.md.
+      preprocess: [tex()],
       compilerOptions: {
         // Force runes mode for the project, except for libraries. Can be removed in svelte 6.
         runes: ({ filename }) =>

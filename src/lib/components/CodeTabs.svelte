@@ -2,6 +2,7 @@
   import type { Snippet } from "svelte"
   import hljs from "highlight.js/lib/core"
   import typescript from "highlight.js/lib/languages/typescript"
+  import { dedent } from "./dedent"
   import "./code-tabs.css"
 
   hljs.registerLanguage("typescript", typescript)
@@ -27,19 +28,6 @@
       el.dataset.highlighted = "yes"
     }
   })
-
-  /* A snippet may render a whole source file or an excerpt lifted out of one,
-     so trim the surrounding blank lines and any indentation shared by every line. */
-  function dedent(source: string): string {
-    const lines = source.replace(/\t/g, "  ").split("\n")
-    while (lines.length && lines[0].trim() === "") lines.shift()
-    while (lines.length && lines[lines.length - 1].trim() === "") lines.pop()
-
-    const indent = Math.min(
-      ...lines.filter((line) => line.trim() !== "").map((line) => line.match(/^ */)![0].length),
-    )
-    return lines.map((line) => line.slice(indent)).join("\n")
-  }
 
   function label(name: string): string {
     return name.charAt(0).toUpperCase() + name.slice(1)

@@ -1,28 +1,17 @@
 <script lang="ts">
   import CodeTabs from "$lib/components/CodeTabs.svelte"
+  import { trace } from "$lib/algorithms/euclid/trace"
   import faithfulSource from "$lib/algorithms/euclid/faithful.ts?raw"
   import idiomaticSource from "$lib/algorithms/euclid/idiomatic.ts?raw"
 
   let m: number | null = $state(119)
   let n: number | null = $state(544)
 
-  const rows = $derived(isPositiveInteger(m) && isPositiveInteger(n) ? euclid(m, n) : null)
+  const steps = $derived(isPositiveInteger(m) && isPositiveInteger(n) ? trace(m, n) : null)
   const r = $derived((m ?? 0) % (n ?? 0))
 
   function isPositiveInteger(value: number | null): value is number {
     return value !== null && Number.isInteger(value) && value > 0
-  }
-
-  function euclid(m: number, n: number) {
-    const values: [number, number, number][] = []
-
-    while (true) {
-      let r = m % n
-      if (r == 0) return values
-      m = n
-      n = r
-      values.push([m, n, m % n])
-    }
   }
 </script>
 
@@ -49,12 +38,13 @@
       <td class:result={r == 0}><input name="n" type="number" bind:value={n} /></td>
       <td>{Number.isNaN(r) ? "" : r}</td>
     </tr>
-    {#if rows}
-      {#each rows as [sm, sn, sr], i (sm)}
+    {#if steps}
+      <!-- The first step is the input row above, which carries the two inputs. -->
+      {#each steps.slice(1) as step (step.m)}
         <tr>
-          <td>{sm}</td>
-          <td class:result={i === rows.length - 1}>{sn}</td>
-          <td>{sr}</td>
+          <td>{step.m}</td>
+          <td class:result={step.r === 0}>{step.n}</td>
+          <td>{step.r}</td>
         </tr>
       {/each}
     {:else}

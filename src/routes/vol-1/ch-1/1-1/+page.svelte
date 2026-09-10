@@ -57,12 +57,27 @@
 
 <h2>Implementation</h2>
 
-<CodeTabs {faithful} {idiomatic} />
+<CodeTabs>
+  <!-- Rendered from the modules the unit tests import, so the page can't drift
+       from the code that is actually verified. -->
+  {#snippet faithful()}{faithfulSource}{/snippet}
+  {#snippet idiomatic()}{idiomaticSource}{/snippet}
+</CodeTabs>
 
-<!-- Rendered from the modules the unit tests import, so the page can't drift
-     from the code that is actually verified. -->
-{#snippet faithful()}{faithfulSource}{/snippet}
-{#snippet idiomatic()}{idiomaticSource}{/snippet}
+<h2>Algorithm Structure</h2>
+
+<p>
+  <b>Algorithm F</b> (Factorial). Given a positive integer $n$, find the <i>factorial</i> of $n$, that
+  is, the product of all numbers $1, 2, \ldots, n$.
+</p>
+
+<ul>
+  <li><b>F1.</b> [Initialize f.] Set $f \leftarrow n$.</li>
+  <li><b>F2.</b> [Is it 1?] If $n = 1$, the algorithm terminates; $f$ is the answer.</li>
+  <li>
+    <b>F3.</b> [Reduce.] Set $n \leftarrow n - 1$, $f \leftarrow f \cdot n$, and go back to step F2.
+  </li>
+</ul>
 
 <style>
   table {

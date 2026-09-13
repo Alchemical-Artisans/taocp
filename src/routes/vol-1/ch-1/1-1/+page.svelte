@@ -6,7 +6,6 @@
  import Mermaid from "$lib/components/Mermaid.svelte"
  import Algorithm from "$lib/components/Algorithm.svelte"
  import Step from "$lib/components/Step.svelte"
- import { until } from "temporal-polyfill/fns/plainyearmonth"
  import { SvelteSet } from "svelte/reactivity"
 
  let m: number | null = $state(119)
@@ -219,7 +218,7 @@
   <dd>Each step of an algorithm contains no ambiguity.</dd>
 
   <dt>Input</dt>
-  <dd>An algorithm takes at least one value as iput and defines its constraints.</dd>
+  <dd>An algorithm takes zero or more inputs and defines its constraints.</dd>
 
   <dt>Output</dt>
   <dd>An algorithm has at least one resulting value which relates to the input.</dd>
@@ -252,18 +251,18 @@
 </dl>
 
 <p>
-  When Knuth points out that $m - qn = r$ demonstrates that if a number that divides both $m$ and
-  $n$ must therefore divide $r$, he is implicitly stating that $A \subseteq B$. Similarly,
+  When Knuth points out that $m - qn = r$ demonstrates that if a number divides both $m$ and
+  $n$ it must therefore divide $r$, he is implicitly stating that $A \subseteq B$. Similarly,
   $qn + r = m$ implies that $B \subseteq A$.
 </p>
 
 <p>
-  So because $A = B$, the set of divisors for $m$ and $n$ are the same as the set of divisors for
+  So because $A = B$, the set of divisors for $m$ and $n$ is the same as the set of divisors for
   $n$ and $r$. Therefore, the largest divisor remains the same after step E3 is applied.
   $\tombstone$
 </p>
 
-<h2>Worked example of $T_3$</h2>
+<h2>Worked Example of $T_3$</h2>
 
 <p>
   Here are the operations involved in calculating the individual values for $m$:
@@ -295,7 +294,7 @@ $$T_3 = \frac{2 + 3 + 1}{3} = 2$$
 
 <p>
   To understand the set theory grounding, consider step E3. The information delivered to the step,
-  along with the step number itself, form a packate of information describing the state of the
+  along with the step number itself, form a packet of information describing the state of the
   machine executing the algorithm at that point:
 </p>
 
@@ -355,7 +354,7 @@ $$T_3 = \frac{2 + 3 + 1}{3} = 2$$
 </table>
 
 <p>
-  Every combination of values for each of these steps form additional elements of the set $Q$.
+  Every combination of values for each of these steps forms additional elements of the set $Q$.
   Also included in $Q$ are the members of $I$, which are bare pairs of $m$ and $n$:
 </p>
 
@@ -621,8 +620,8 @@ $$T_3 = \frac{2 + 3 + 1}{3} = 2$$
 </table>
 
 <p>
-  This sequence $x_0, x_1, \ldots, x_{15}$ are collectively referred to as a <i>computational sequence</i>,
-  with this particular example defined by the member of $(119, 544)$. This one <i>terminates in $15$ steps</i>
+  This sequence $x_0, x_1, \ldots, x_{15}$ is collectively referred to as a <i>computational sequence</i>,
+  with this particular example defined by $(119, 544)$. This one <i>terminates in $15$ steps</i>
   because step $15$ is the first step where a member of $\Omega$ is encountered.
 </p>
 
@@ -636,7 +635,7 @@ $$T_3 = \frac{2 + 3 + 1}{3} = 2$$
 
 <p>
   Effectiveness must also be achieved via additional constraints, but this can be
-  achieved by a number of different approaches. The discussion around $A^*$ is one
+  accomplished by a number of different approaches. The discussion around $A^*$ is one
   example of this, constraining the expression of algorithms to mutating sequences
   of letters, which of course can be written down and therefore worked by hand.
 </p>
@@ -704,7 +703,7 @@ c^6 a^3 b^3
 $$
 
 <p>
-  Applying this process repeatedly will eventually reach $c^15 a^3$, which means
+  Applying this process repeatedly will eventually reach $c^{15} a^3$, which means
   that $\theta_1$ does not apply and so $a_1 = 3$. This step eliminates all values
   of $a$ with $\theta_3 = a$, $\phi_3 = \text{empty}$, $b_3 = 3$ and $a_3 = 4$.
   We'll consider strings exclusively containing $c$ as the output, so $N = 4$.
@@ -817,7 +816,7 @@ $$
 <p>
   3. It's unclear from the problem statement that assignment isn't entirely
   disallowed. So even though $m \leftarrow n$ is disallowed, expressions like
-  "Divide $m$ by $n$ and let $m$ b the remainder still appear in the solution.
+  "Divide $m$ by $n$ and let $m$ be the remainder" still appears in the solution.
 </p>
 
 <p>

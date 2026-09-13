@@ -38,6 +38,13 @@ describe("renderTex", () => {
     expect(renderTex("a \\divides b")).toContain("<svg")
   })
 
+  it("draws the tombstone in the current text colour", () => {
+    // MathJax renders a bare \rule as a fixed black box, which vanishes on a
+    // dark background; the macro pins it to currentColor.
+    const rule = renderTex("\\tombstone").match(/<rect[^>]*data-bgcolor[^>]*>/)?.[0]
+    expect(rule).toContain('fill="currentColor"')
+  })
+
   it("rejects an undefined control sequence", () => {
     expect(() => renderTex("\\notAMacro")).toThrow(TexError)
   })

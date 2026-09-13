@@ -108,6 +108,35 @@ main li {
   margin-bottom: 0.35em;
 }
 
+/* Definition lists — used for notation/glossary references. Each term sits on
+   its own line with a hanging accent rule; the definition is indented under it.
+   Terms are often inline math or short code-like labels, so they get the mono
+   face and a touch more weight. */
+main dl {
+  margin: 0 0 1.4em;
+  max-width: 68ch;
+  line-height: 1.7;
+}
+
+main dt {
+  font-family: "Space Mono", ui-monospace, monospace;
+  font-weight: 700;
+  font-size: 0.95em;
+  color: var(--ink);
+  padding-left: 0.7em;
+  border-left: 2px solid var(--accent);
+}
+
+main dd {
+  margin: 0.2em 0 0;
+  padding-left: 0.7em;
+  color: var(--ink-soft);
+}
+
+main dd + dt {
+  margin-top: 1em;
+}
+
 main :not(pre) > code {
   font-family: "Space Mono", ui-monospace, monospace;
   font-size: 0.88em;
@@ -131,12 +160,13 @@ main td {
   border-bottom: 1px solid var(--line);
 }
 
+/* Column labels are often TeX output ($m$, $j$, ...), so this stays close to
+   MathJax's own plain, normal-weight rendering rather than the bold/uppercase
+   label treatment a table header usually gets — that clashed badly whenever
+   math landed in a header. */
 main thead th {
-  font-family: "Libre Franklin", ui-sans-serif, system-ui, sans-serif;
-  font-size: 0.72rem;
-  font-weight: 700;
-  text-transform: uppercase;
-  letter-spacing: 0.08em;
+  font-family: inherit;
+  font-weight: 400;
   color: var(--ink-faint);
 }
 

@@ -30,6 +30,14 @@ describe("Algorithm.svelte", () => {
     ])
   })
 
+  it("closes the algorithm with a tombstone", () => {
+    const { container } = render(AlgorithmHarness)
+
+    const end = container.querySelector(".end")
+    expect(end?.getAttribute("aria-label")).toBe("End of algorithm")
+    expect(end?.querySelector("svg")).toBeTruthy()
+  })
+
   /* The point of the highlight: every step of Algorithm F is named F-something,
      and pointing at one letter shows the rest of the family. */
   it("lights every letter of the algorithm when one is hovered", async () => {

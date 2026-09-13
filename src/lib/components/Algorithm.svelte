@@ -31,10 +31,18 @@
 </p>
 
 <ul class="steps">{@render children()}</ul>
+<p class="end" aria-label="End of algorithm">$\tombstone$</p>
 
 <style>
   .steps {
     list-style: none;
     padding-left: 0;
+  }
+
+  /* Knuth closes every algorithm with a tombstone; he sets it at the end of the
+     last step, but flush right reads the same and needs no help from the steps. */
+  .end {
+    margin: 0;
+    text-align: right;
   }
 </style>

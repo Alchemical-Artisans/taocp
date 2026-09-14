@@ -72,6 +72,15 @@ main p {
   max-width: 68ch;
 }
 
+main a {
+  color: var(--accent);
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+main a:hover {
+  text-decoration-thickness: 2px;
+}
+
 main h2,
 main h3,
 main h4 {

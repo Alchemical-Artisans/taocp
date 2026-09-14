@@ -3,6 +3,7 @@ import { TeX } from "@mathjax/src/js/input/tex.js"
 import { SVG } from "@mathjax/src/js/output/svg.js"
 import { liteAdaptor } from "@mathjax/src/js/adaptors/liteAdaptor.js"
 import { RegisterHTMLHandler } from "@mathjax/src/js/handlers/html.js"
+import { AssistiveMmlHandler } from "@mathjax/src/js/a11y/assistive-mml.js"
 import { MathJaxNewcmFont } from "@mathjax/mathjax-newcm-font/js/svg.js"
 import { macros } from "./macros.ts"
 
@@ -61,7 +62,10 @@ let adaptor: ReturnType<typeof liteAdaptor> | null = null
 function jax() {
   if (!document || !adaptor) {
     adaptor = liteAdaptor()
-    RegisterHTMLHandler(adaptor)
+    // Adds a hidden MathML rendering of each expression alongside its SVG, so
+    // screen readers get the notation instead of silence: the SVG glyphs are
+    // just filled paths with no text content of their own.
+    AssistiveMmlHandler(RegisterHTMLHandler(adaptor))
     document = mathjax.document("", {
       InputJax: new TeX({ packages, macros }),
       OutputJax: new SVG({

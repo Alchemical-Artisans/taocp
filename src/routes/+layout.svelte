@@ -31,30 +31,46 @@
   />
 </svelte:head>
 
+<a href="#main-content" class="sr-only">Skip to content</a>
+
 <TopBar navOpen={mobileNavOpen} onToggleNav={() => (mobileNavOpen = !mobileNavOpen)} />
 
 <div class="layout">
-  <TreeNav open={mobileNavOpen} onClose={() => (mobileNavOpen = false)} />
+  <TreeNav
+    open={mobileNavOpen}
+    onClose={() => {
+      mobileNavOpen = false
+      document.getElementById("nav-toggle-button")?.focus()
+    }}
+  />
 
-  <main>
+  <main id="main-content" tabindex="-1" inert={mobileNavOpen}>
     {#if current}
-      <div class="breadcrumb">
+      <nav class="breadcrumb" aria-label="Breadcrumb">
         <a href="{base}/">Home</a>
         <span>›</span>
-        <span>Vol. {current.volume.number}</span>
+        <span aria-current={current.chapter ? undefined : "page"}>Vol. {current.volume.number}</span
+        >
         {#if current.chapter}
           <span>›</span>
           {#if current.chapter.sections.length === 0}
-            <a href={chapterHref(current.volume, current.chapter)}>Ch. {current.chapter.number}</a>
+            <a
+              href={chapterHref(current.volume, current.chapter)}
+              aria-current={current.section ? undefined : "page"}
+            >
+              Ch. {current.chapter.number}
+            </a>
           {:else}
-            <span>Ch. {current.chapter.number}</span>
+            <span aria-current={current.section ? undefined : "page"}
+              >Ch. {current.chapter.number}</span
+            >
           {/if}
         {/if}
         {#if current.section}
           <span>›</span>
-          <span>{current.section.number}</span>
+          <span aria-current="page">{current.section.number}</span>
         {/if}
-      </div>
+      </nav>
       <h1>
         {#if current.section}
           <span class="secno">{current.section.number}</span>{current.section.title}
@@ -81,6 +97,10 @@
   main {
     padding: 40px 56px 80px;
     min-width: 0;
+  }
+  main:focus-visible {
+    outline: 2px solid var(--accent);
+    outline-offset: -2px;
   }
 
   .breadcrumb {

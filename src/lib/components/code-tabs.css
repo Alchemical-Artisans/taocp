@@ -4,7 +4,7 @@
    the --accent green of the surrounding chrome rather than a stock hljs theme. */
 
 :root {
-  --code-comment: #7c8796;
+  --code-comment: #6d7784;
   --code-keyword: #8250a8;
   --code-string: #3f6b4a;
   --code-number: #9a5b1e;
@@ -15,7 +15,7 @@
 
 @media (prefers-color-scheme: dark) {
   :root:not([data-theme="light"]) {
-    --code-comment: #6d7684;
+    --code-comment: #7a8494;
     --code-keyword: #c8a2e8;
     --code-string: #8fd0a2;
     --code-number: #e0b070;
@@ -26,7 +26,7 @@
 }
 
 :root[data-theme="dark"] {
-  --code-comment: #6d7684;
+  --code-comment: #7a8494;
   --code-keyword: #c8a2e8;
   --code-string: #8fd0a2;
   --code-number: #e0b070;

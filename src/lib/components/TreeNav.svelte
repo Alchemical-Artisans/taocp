@@ -9,6 +9,15 @@
 
   const openVolumes = new SvelteSet(toc.filter((v) => v.chapters.length > 0).map((v) => v.id))
 
+  let navElement: HTMLElement | undefined = $state()
+
+  /* The rest of the page is made `inert` while the drawer is open, so this is
+     the only place focus can usefully land — without it, focus stays on the
+     (now inert) element that was focused before the drawer opened. */
+  $effect(() => {
+    if (open) navElement?.focus()
+  })
+
   function toggleVolume(id: string) {
     if (openVolumes.has(id)) {
       openVolumes.delete(id)
@@ -36,7 +45,14 @@
   <div class="backdrop" aria-hidden="true" onclick={() => onClose?.()}></div>
 {/if}
 
-<nav id="tree-nav" class="tree" class:open aria-label="Book contents">
+<nav
+  id="tree-nav"
+  class="tree"
+  class:open
+  aria-label="Book contents"
+  tabindex="-1"
+  bind:this={navElement}
+>
   {#each toc as volume (volume.id)}
     {@const isOpen = openVolumes.has(volume.id)}
     <div class="vol-group">
@@ -64,6 +80,7 @@
               <a
                 href={chapterHref(volume, chapter)}
                 class:active={current?.chapter?.id === chapter.id}
+                aria-current={current?.chapter?.id === chapter.id ? "page" : undefined}
               >
                 Ch. {chapter.number} — {chapter.title}
               </a>
@@ -78,6 +95,7 @@
                   <a
                     href={sectionHref(volume, chapter, section)}
                     class:active={current?.section?.id === section.id}
+                    aria-current={current?.section?.id === section.id ? "page" : undefined}
                   >
                     {section.number}
                     {section.title}

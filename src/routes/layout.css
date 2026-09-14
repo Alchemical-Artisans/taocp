@@ -8,7 +8,7 @@
   --rail: #eceef1;
   --ink: #1c2430;
   --ink-soft: #5b6472;
-  --ink-faint: #8991a0;
+  --ink-faint: #656b76;
   --accent: #3f6b4a;
   --accent-tint: #e2ece4;
   --line: #dde1e6;
@@ -23,7 +23,7 @@
     --rail: #12171e;
     --ink: #e4e8ee;
     --ink-soft: #a1aab8;
-    --ink-faint: #6d7684;
+    --ink-faint: #788291;
     --accent: #6fae82;
     --accent-tint: #17281c;
     --line: #262d38;
@@ -38,7 +38,7 @@
   --rail: #12171e;
   --ink: #e4e8ee;
   --ink-soft: #a1aab8;
-  --ink-faint: #6d7684;
+  --ink-faint: #788291;
   --accent: #6fae82;
   --accent-tint: #17281c;
   --line: #262d38;
@@ -246,4 +246,56 @@ mjx-container[jax="SVG"][display="true"] {
   /* Long derivations scroll instead of widening the page on a phone. */
   overflow-x: auto;
   overflow-y: hidden;
+}
+
+/* The hidden MathML that src/lib/tex/render.ts asks MathJax to attach next to
+   every rendered SVG expression. Screen readers read this instead of the SVG,
+   which is marked aria-hidden by MathJax itself; sighted users never see it.
+   Clipped rather than display:none, which some assistive tech skips. */
+mjx-assistive-mml {
+  position: absolute !important;
+  top: 0;
+  left: 0;
+  width: 1px;
+  height: 1px;
+  padding: 0 !important;
+  margin: -1px !important;
+  overflow: hidden !important;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0 !important;
+}
+
+/* Visually hidden but available to assistive tech — used by the skip link and
+   any other content meant for screen readers only. */
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+.sr-only:focus-visible {
+  position: fixed;
+  top: 10px;
+  left: 10px;
+  width: auto;
+  height: auto;
+  padding: 10px 16px;
+  margin: 0;
+  overflow: visible;
+  clip: auto;
+  white-space: normal;
+  background: var(--surface);
+  color: var(--ink);
+  border: 2px solid var(--accent);
+  border-radius: 6px;
+  z-index: 100;
+  font-family: "Libre Franklin", ui-sans-serif, system-ui, sans-serif;
+  font-weight: 600;
 }

@@ -4,8 +4,9 @@
   let { navOpen = false, onToggleNav }: { navOpen?: boolean; onToggleNav?: () => void } = $props()
 </script>
 
-<div class="topbar">
+<header class="topbar">
   <button
+    id="nav-toggle-button"
     type="button"
     class="menu-btn"
     aria-label={navOpen ? "Close contents" : "Open contents"}
@@ -13,10 +14,10 @@
     aria-controls="tree-nav"
     onclick={() => onToggleNav?.()}
   >
-    {navOpen ? "✕" : "☰"}
+    <span aria-hidden="true">{navOpen ? "✕" : "☰"}</span>
   </button>
   <a class="wordmark" href="{base}/">TAOCP Companion</a>
-</div>
+</header>
 
 <style>
   .topbar {

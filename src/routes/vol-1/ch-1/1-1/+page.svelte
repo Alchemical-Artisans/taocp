@@ -109,16 +109,18 @@
 <table>
   <thead>
     <tr>
-      <th>$m$</th>
-      <th>$n$</th>
-      <th>$r$</th>
+      <th scope="col">$m$</th>
+      <th scope="col">$n$</th>
+      <th scope="col">$r$</th>
     </tr>
   </thead>
 
   <tbody>
     <tr>
-      <td><input name="m" type="number" bind:value={m} /></td>
-      <td class:result={r == 0}><input name="n" type="number" bind:value={n} /></td>
+      <td><input name="m" type="number" aria-label="m" bind:value={m} /></td>
+      <td class:result={r == 0}
+        ><input name="n" type="number" aria-label="n" bind:value={n} /></td
+      >
       <td>{Number.isNaN(r) ? "" : r}</td>
     </tr>
     {#if steps}
@@ -166,6 +168,8 @@
   algorithm="F"
   chart={`
         flowchart LR
+        accTitle: Flowchart of Algorithm F, Factorial
+        accDescr: Start leads to F1, Initialize f. F1 leads to F2, is it 1. If no, F2 leads to F3, Reduce, which loops back to F2. If yes, F2 leads to Result.
         F1[F1. Initialize $$f$$.]
         F2[Is it 1?]
         F3[Reduce.]
@@ -307,10 +311,10 @@ $$T_3 = \frac{2 + 3 + 1}{3} = 2$$
   </colgroup>
   <thead>
     <tr>
-      <th>$m$</th>
-      <th>$n$</th>
-      <th>$r$</th>
-      <th>Step</th>
+      <th scope="col">$m$</th>
+      <th scope="col">$n$</th>
+      <th scope="col">$r$</th>
+      <th scope="col">Step</th>
     </tr>
   </thead>
   <tbody>
@@ -337,10 +341,10 @@ $$T_3 = \frac{2 + 3 + 1}{3} = 2$$
   </colgroup>
   <thead>
     <tr>
-      <th>$m$</th>
-      <th>$n$</th>
-      <th>$r$</th>
-      <th>Step</th>
+      <th scope="col">$m$</th>
+      <th scope="col">$n$</th>
+      <th scope="col">$r$</th>
+      <th scope="col">Step</th>
     </tr>
   </thead>
   <tbody>
@@ -368,23 +372,23 @@ $$T_3 = \frac{2 + 3 + 1}{3} = 2$$
   </colgroup>
   <thead>
     <tr>
-      <th>&nbsp;</th>
-      <th>$m$</th>
-      <th>$n$</th>
-      <th>$r$</th>
-      <th>Step</th>
+      <th scope="col">&nbsp;</th>
+      <th scope="col">$m$</th>
+      <th scope="col">$n$</th>
+      <th scope="col">$r$</th>
+      <th scope="col">Step</th>
     </tr>
   </thead>
   <tbody>
     <tr>
-      <th>$i$</th>
+      <th scope="row">$i$</th>
       <td>$119$</td>
       <td>$544$</td>
       <td>&nbsp;</td>
       <td>&nbsp;</td>
     </tr>
     <tr>
-      <th>$f(i)$</th>
+      <th scope="row">$f(i)$</th>
       <td>$119$</td>
       <td>$544$</td>
       <td>$0$</td>
@@ -407,37 +411,37 @@ $$T_3 = \frac{2 + 3 + 1}{3} = 2$$
   </colgroup>
   <thead>
     <tr>
-      <th>&nbsp;</th>
-      <th>$m$</th>
-      <th>$n$</th>
-      <th>$r$</th>
-      <th>Step</th>
+      <th scope="col">&nbsp;</th>
+      <th scope="col">$m$</th>
+      <th scope="col">$n$</th>
+      <th scope="col">$r$</th>
+      <th scope="col">Step</th>
     </tr>
   </thead>
   <tbody>
     <tr>
-      <th>$s_1$</th>
+      <th scope="row">$s_1$</th>
       <td>$544$</td>
       <td>$119$</td>
       <td>$68$</td>
       <td>$2$</td>
     </tr>
     <tr>
-      <th>$f(s_1)$</th>
+      <th scope="row">$f(s_1)$</th>
       <td>$544$</td>
       <td>$119$</td>
       <td>$68$</td>
       <td>$3$</td>
     </tr>
     <tr>
-      <th>$s_2$</th>
+      <th scope="row">$s_2$</th>
       <td>$51$</td>
       <td>$17$</td>
       <td>$0$</td>
       <td>$2$</td>
     </tr>
     <tr>
-      <th>$f(s_2)$</th>
+      <th scope="row">$f(s_2)$</th>
       <td>&nbsp;</td>
       <td>$17$</td>
       <td>&nbsp;</td>
@@ -479,17 +483,17 @@ $$T_3 = \frac{2 + 3 + 1}{3} = 2$$
   </colgroup>
   <thead>
     <tr>
-      <th>&nbsp;</th>
-      <th>$m$</th>
-      <th>$n$</th>
-      <th>$r$</th>
-      <th>Step</th>
-      <th>Equation</th>
+      <th scope="col">&nbsp;</th>
+      <th scope="col">$m$</th>
+      <th scope="col">$n$</th>
+      <th scope="col">$r$</th>
+      <th scope="col">Step</th>
+      <th scope="col">Equation</th>
     </tr>
   </thead>
   <tbody>
     <tr>
-      <th>$x_0$</th>
+      <th scope="row">$x_0$</th>
       <td>$119$</td>
       <td>$544$</td>
       <td>&nbsp;</td>
@@ -497,7 +501,7 @@ $$T_3 = \frac{2 + 3 + 1}{3} = 2$$
       <td>$f((m,n)) = (m,n,0,1)$</td>
     </tr>
     <tr>
-      <th>$x_1 = f(x_0)$</th>
+      <th scope="row">$x_1 = f(x_0)$</th>
       <td>$119$</td>
       <td>$544$</td>
       <td>$0$</td>
@@ -505,7 +509,7 @@ $$T_3 = \frac{2 + 3 + 1}{3} = 2$$
       <td>{@render E1()}</td>
     </tr>
     <tr>
-      <th>$x_2 = f(x_1)$</th>
+      <th scope="row">$x_2 = f(x_1)$</th>
       <td>$119$</td>
       <td>$544$</td>
       <td>$119$</td>
@@ -513,7 +517,7 @@ $$T_3 = \frac{2 + 3 + 1}{3} = 2$$
       <td>{@render E2()}</td>
     </tr>
     <tr>
-      <th>$x_3 = f(x_2)$</th>
+      <th scope="row">$x_3 = f(x_2)$</th>
       <td>$119$</td>
       <td>$544$</td>
       <td>$119$</td>
@@ -521,7 +525,7 @@ $$T_3 = \frac{2 + 3 + 1}{3} = 2$$
       <td>{@render E3()}</td>
     </tr>
     <tr>
-      <th>$x_4 = f(x_3)$</th>
+      <th scope="row">$x_4 = f(x_3)$</th>
       <td>$544$</td>
       <td>$119$</td>
       <td>$119$</td>
@@ -529,7 +533,7 @@ $$T_3 = \frac{2 + 3 + 1}{3} = 2$$
       <td>{@render E1()}</td>
     </tr>
     <tr>
-      <th>$x_5 = f(x_4)$</th>
+      <th scope="row">$x_5 = f(x_4)$</th>
       <td>$544$</td>
       <td>$119$</td>
       <td>$68$</td>
@@ -537,7 +541,7 @@ $$T_3 = \frac{2 + 3 + 1}{3} = 2$$
       <td>{@render E2()}</td>
     </tr>
     <tr>
-      <th>$x_6 = f(x_5)$</th>
+      <th scope="row">$x_6 = f(x_5)$</th>
       <td>$544$</td>
       <td>$119$</td>
       <td>$68$</td>
@@ -545,7 +549,7 @@ $$T_3 = \frac{2 + 3 + 1}{3} = 2$$
       <td>{@render E3()}</td>
     </tr>
     <tr>
-      <th>$x_7 = f(x_6)$</th>
+      <th scope="row">$x_7 = f(x_6)$</th>
       <td>$119$</td>
       <td>$68$</td>
       <td>$68$</td>
@@ -553,7 +557,7 @@ $$T_3 = \frac{2 + 3 + 1}{3} = 2$$
       <td>{@render E1()}</td>
     </tr>
     <tr>
-      <th>$x_8 = f(x_7)$</th>
+      <th scope="row">$x_8 = f(x_7)$</th>
       <td>$119$</td>
       <td>$68$</td>
       <td>$51$</td>
@@ -561,7 +565,7 @@ $$T_3 = \frac{2 + 3 + 1}{3} = 2$$
       <td>{@render E2()}</td>
     </tr>
     <tr>
-      <th>$x_9 = f(x_8)$</th>
+      <th scope="row">$x_9 = f(x_8)$</th>
       <td>$119$</td>
       <td>$68$</td>
       <td>$51$</td>
@@ -569,7 +573,7 @@ $$T_3 = \frac{2 + 3 + 1}{3} = 2$$
       <td>{@render E3()}</td>
     </tr>
     <tr>
-      <th>$x_{10} = f(x_9)$</th>
+      <th scope="row">$x_{10} = f(x_9)$</th>
       <td>$68$</td>
       <td>$51$</td>
       <td>$51$</td>
@@ -577,7 +581,7 @@ $$T_3 = \frac{2 + 3 + 1}{3} = 2$$
       <td>{@render E1()}</td>
     </tr>
     <tr>
-      <th>$x_{11} = f(x_{10})$</th>
+      <th scope="row">$x_{11} = f(x_{10})$</th>
       <td>$68$</td>
       <td>$51$</td>
       <td>$17$</td>
@@ -585,7 +589,7 @@ $$T_3 = \frac{2 + 3 + 1}{3} = 2$$
       <td>{@render E2()}</td>
     </tr>
     <tr>
-      <th>$x_{12} = f(x_{11})$</th>
+      <th scope="row">$x_{12} = f(x_{11})$</th>
       <td>$68$</td>
       <td>$51$</td>
       <td>$17$</td>
@@ -593,7 +597,7 @@ $$T_3 = \frac{2 + 3 + 1}{3} = 2$$
       <td>{@render E3()}</td>
     </tr>
     <tr>
-      <th>$x_{13} = f(x_{12})$</th>
+      <th scope="row">$x_{13} = f(x_{12})$</th>
       <td>$51$</td>
       <td>$17$</td>
       <td>$17$</td>
@@ -601,7 +605,7 @@ $$T_3 = \frac{2 + 3 + 1}{3} = 2$$
       <td>{@render E1()}</td>
     </tr>
     <tr>
-      <th>$x_{14} = f(x_{13})$</th>
+      <th scope="row">$x_{14} = f(x_{13})$</th>
       <td>$51$</td>
       <td>$17$</td>
       <td>$0$</td>
@@ -609,7 +613,7 @@ $$T_3 = \frac{2 + 3 + 1}{3} = 2$$
       <td>{@render E2()}</td>
     </tr>
     <tr>
-      <th>$x_{15} = f(x_{14})$</th>
+      <th scope="row">$x_{15} = f(x_{14})$</th>
       <td>&nbsp;</td>
       <td>$17$</td>
       <td>&nbsp;</td>
@@ -717,21 +721,21 @@ $$
 <table>
   <thead>
     <tr>
-      <th>$j$</th>
-      <th>$theta_j$</th>
-      <th>$phi_j$</th>
-      <th>$b_j$</th>
-      <th>$a_j$</th>
+      <th scope="col">$j$</th>
+      <th scope="col">$theta_j$</th>
+      <th scope="col">$phi_j$</th>
+      <th scope="col">$b_j$</th>
+      <th scope="col">$a_j$</th>
     </tr>
   </thead>
   <tbody>
     {#each a_star_rules as rule, j (j)}
       <tr>
         <td>{j}</td>
-        <td><input type="text" bind:value={rule.theta} /></td>
-        <td><input type="text" bind:value={rule.phi} /></td>
-        <td><input type="number" bind:value={rule.b} /></td>
-        <td><input type="number" bind:value={rule.a} /></td>
+        <td><input type="text" aria-label="theta sub {j}" bind:value={rule.theta} /></td>
+        <td><input type="text" aria-label="phi sub {j}" bind:value={rule.phi} /></td>
+        <td><input type="number" aria-label="b sub {j}" bind:value={rule.b} /></td>
+        <td><input type="number" aria-label="a sub {j}" bind:value={rule.a} /></td>
       </tr>
     {/each}
   </tbody>
@@ -752,7 +756,7 @@ $$
 </p>
 
 <p>
-  <input type="text" bind:value={test_input} />
+  <input type="text" aria-label="Test string" bind:value={test_input} />
 </p>
 
 {#snippet aStarString(value)}{#if value === ""} {:else}{#each collapseRuns(value) as run}{run.char}{#if run.count > 1}<sup>{run.count}</sup>{/if}{/each}{/if}{/snippet}
@@ -765,9 +769,9 @@ $$
   </colgroup>
   <thead>
     <tr>
-      <th>&nbsp;</th>
-      <th>String</th>
-      <th>$j$</th>
+      <th scope="col">&nbsp;</th>
+      <th scope="col">String</th>
+      <th scope="col">$j$</th>
     </tr>
   </thead>
   <tbody>

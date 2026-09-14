@@ -2,6 +2,7 @@
   import "./layout.css"
   import favicon from "$lib/assets/favicon.svg"
   import { page } from "$app/state"
+  import { base } from "$app/paths"
   import TopBar from "$lib/components/TopBar.svelte"
   import TreeNav from "$lib/components/TreeNav.svelte"
   import RightRail from "$lib/components/RightRail.svelte"
@@ -29,7 +30,7 @@
   <main>
     {#if current}
       <div class="breadcrumb">
-        <a href="/">Home</a>
+        <a href="{base}/">Home</a>
         <span>›</span>
         <span>Vol. {current.volume.number}</span>
         {#if current.chapter}

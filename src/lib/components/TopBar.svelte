@@ -1,4 +1,8 @@
-<a class="topbar" href="/">
+<script lang="ts">
+  import { base } from "$app/paths"
+</script>
+
+<a class="topbar" href="{base}/">
   <span class="wordmark">TAOCP Companion</span>
 </a>
 

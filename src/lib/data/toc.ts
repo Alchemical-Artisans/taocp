@@ -2,6 +2,8 @@
 // This is example data only, standing in for the real book structure
 // until the actual volumes/chapters/sections are supplied.
 
+import { base } from "$app/paths"
+
 export type TocSection = {
   id: string
   number: string
@@ -44,11 +46,11 @@ export const toc: TocVolume[] = [
 ]
 
 export function chapterHref(volume: TocVolume, chapter: TocChapter): string {
-  return `/${volume.slug}/${chapter.slug}`
+  return `${base}/${volume.slug}/${chapter.slug}`
 }
 
 export function sectionHref(volume: TocVolume, chapter: TocChapter, section: TocSection): string {
-  return `/${volume.slug}/${chapter.slug}/${section.slug}`
+  return `${base}/${volume.slug}/${chapter.slug}/${section.slug}`
 }
 
 export type TocPath = {
@@ -58,7 +60,8 @@ export type TocPath = {
 }
 
 export function resolvePath(pathname: string): TocPath | undefined {
-  const [volumeSlug, chapterSlug, sectionSlug] = pathname.split("/").filter(Boolean)
+  const relative = base && pathname.startsWith(base) ? pathname.slice(base.length) : pathname
+  const [volumeSlug, chapterSlug, sectionSlug] = relative.split("/").filter(Boolean)
 
   const volume = toc.find((v) => v.slug === volumeSlug)
   if (!volume) return undefined

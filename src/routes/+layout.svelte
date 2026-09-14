@@ -5,12 +5,21 @@
   import { base } from "$app/paths"
   import TopBar from "$lib/components/TopBar.svelte"
   import TreeNav from "$lib/components/TreeNav.svelte"
-  import RightRail from "$lib/components/RightRail.svelte"
   import { resolvePath, chapterHref } from "$lib/data/toc"
 
   let { children } = $props()
 
   const current = $derived(resolvePath(page.url.pathname))
+
+  let mobileNavOpen = $state(false)
+  let lastPathname = page.url.pathname
+
+  $effect(() => {
+    if (page.url.pathname !== lastPathname) {
+      lastPathname = page.url.pathname
+      mobileNavOpen = false
+    }
+  })
 </script>
 
 <svelte:head>
@@ -22,10 +31,10 @@
   />
 </svelte:head>
 
-<TopBar />
+<TopBar navOpen={mobileNavOpen} onToggleNav={() => (mobileNavOpen = !mobileNavOpen)} />
 
 <div class="layout">
-  <TreeNav />
+  <TreeNav open={mobileNavOpen} onClose={() => (mobileNavOpen = false)} />
 
   <main>
     {#if current}
@@ -59,15 +68,13 @@
 
     {@render children()}
   </main>
-
-  <RightRail />
 </div>
 
 <style>
   .layout {
     display: grid;
-    grid-template-columns: 268px minmax(0, 1fr) 232px;
-    max-width: 1440px;
+    grid-template-columns: 268px minmax(0, 1fr);
+    max-width: 1200px;
     margin: 0 auto;
   }
 
@@ -111,16 +118,10 @@
     .layout {
       grid-template-columns: 240px 1fr;
     }
-    .layout :global(aside.rail) {
-      display: none;
-    }
   }
   @media (max-width: 760px) {
     .layout {
       grid-template-columns: 1fr;
-    }
-    .layout :global(nav.tree) {
-      display: none;
     }
     main {
       padding: 28px 20px 60px;

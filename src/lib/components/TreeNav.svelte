@@ -3,6 +3,8 @@
   import { SvelteSet } from "svelte/reactivity"
   import { toc, resolvePath, chapterHref, sectionHref } from "$lib/data/toc"
 
+  let { open = false, onClose }: { open?: boolean; onClose?: () => void } = $props()
+
   const current = $derived(resolvePath(page.url.pathname))
 
   const openVolumes = new SvelteSet(toc.filter((v) => v.chapters.length > 0).map((v) => v.id))
@@ -14,9 +16,27 @@
       openVolumes.add(id)
     }
   }
+
+  $effect(() => {
+    if (!open) return
+    document.body.style.overflow = "hidden"
+    return () => {
+      document.body.style.overflow = ""
+    }
+  })
 </script>
 
-<nav class="tree" aria-label="Book contents">
+<svelte:window
+  onkeydown={(e) => {
+    if (open && e.key === "Escape") onClose?.()
+  }}
+/>
+
+{#if open}
+  <div class="backdrop" aria-hidden="true" onclick={() => onClose?.()}></div>
+{/if}
+
+<nav id="tree-nav" class="tree" class:open aria-label="Book contents">
   {#each toc as volume (volume.id)}
     {@const isOpen = openVolumes.has(volume.id)}
     <div class="vol-group">
@@ -158,5 +178,35 @@
     border-left-color: var(--accent);
     background: var(--accent-tint);
     font-weight: 600;
+  }
+
+  .backdrop {
+    display: none;
+  }
+
+  @media (max-width: 760px) {
+    .tree {
+      display: none;
+    }
+    .tree.open {
+      display: block;
+      position: fixed;
+      top: 52px;
+      left: 0;
+      bottom: 0;
+      height: auto;
+      width: min(82vw, 320px);
+      z-index: 15;
+      box-shadow: var(--shadow);
+    }
+    .backdrop {
+      display: block;
+      position: fixed;
+      inset: 52px 0 0 0;
+      background: rgba(0, 0, 0, 0.4);
+      border: none;
+      padding: 0;
+      z-index: 14;
+    }
   }
 </style>

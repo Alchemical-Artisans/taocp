@@ -13,9 +13,17 @@ const gitignorePath = path.resolve(import.meta.dirname, ".gitignore")
 
 export default defineConfig(
   includeIgnoreFile(gitignorePath),
+  {
+    // svelte-eslint-parser parses .svelte files directly, without the tex()
+    // preprocessor Vite applies at build time, so it trips on this page's raw
+    // TeX braces (e.g. \frac{n}{2}) exactly as described in
+    // src/lib/tex/README.md.
+    ignores: ["src/routes/vol-1/ch-1/1-1/+page.svelte"],
+  },
   js.configs.recommended,
   ts.configs.recommended,
   svelte.configs.recommended,
+  storybook.configs["flat/recommended"],
   prettier,
   svelte.configs.prettier,
   {

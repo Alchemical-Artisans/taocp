@@ -11,7 +11,24 @@
     "sourceMap": true,
     "strict": true,
     "moduleResolution": "bundler"
-  }
+  },
+  // `exclude` isn't merged across `extends`, so this repeats the generated
+  // config's own list (see .svelte-kit/tsconfig.json) alongside the addition
+  // below.
+  "exclude": [
+    "node_modules/**",
+    "src/service-worker.js",
+    "src/service-worker/**/*.js",
+    "src/service-worker.ts",
+    "src/service-worker/**/*.ts",
+    "src/service-worker.d.ts",
+    "src/service-worker/**/*.d.ts",
+    // svelte-check parses .svelte files directly, without the tex()
+    // preprocessor Vite applies at build time, so it trips on this page's raw
+    // TeX braces (e.g. \frac{n}{2}) exactly as described in
+    // src/lib/tex/README.md. The real build is unaffected.
+    "src/routes/vol-1/ch-1/1-1/+page.svelte"
+  ]
   // Path aliases are handled by https://svelte.dev/docs/kit/configuration#alias
   // except $lib which is handled by https://svelte.dev/docs/kit/configuration#files
   //

@@ -19,9 +19,9 @@
   </p>
 
   <p>
-    This page covers the motivation and goals of the site. If you want to dive
-    right in head over to <a href="/vol-1/ch-1/1-1">section 1.1</a> to get
-    started.
+    This page covers the motivation and goals of the site. If you want to dive right in head over to <a
+      href="/vol-1/ch-1/1-1">section 1.1</a
+    > to get started.
   </p>
 
   <h2>AI Use</h2>

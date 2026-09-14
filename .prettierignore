@@ -7,3 +7,8 @@ bun.lockb
 
 # Miscellaneous
 /static/
+
+# Prettier parses .svelte files directly, without the tex() preprocessor Vite
+# applies at build time, so it trips on this page's raw TeX braces (e.g.
+# \frac{n}{2}) exactly as described in src/lib/tex/README.md.
+src/routes/vol-1/ch-1/1-1/+page.svelte

@@ -98,7 +98,7 @@
  }
 </script>
 
-<h2>Euclid's Algorithm</h2>
+<h2 id="euclids-algorithm">Euclid's Algorithm</h2>
 
 <p>
   Once you've stepped through Euclid's algorithm by hand, you may want to see a few more examples
@@ -140,7 +140,7 @@
   </tbody>
 </table>
 
-<h2>Implementation</h2>
+<h2 id="implementation">Implementation</h2>
 
 <CodeTabs>
   <!-- Rendered from the modules the unit tests import, so the page can't drift
@@ -149,7 +149,7 @@
   {#snippet idiomatic()}{idiomaticSource}{/snippet}
 </CodeTabs>
 
-<h2>Algorithm Structure</h2>
+<h2 id="algorithm-structure">Algorithm Structure</h2>
 
 <Algorithm letter="F" name="Factorial">
   {#snippet intro()}
@@ -178,7 +178,7 @@
         `}
 />
 
-<h2>Notation Reference</h2>
+<h2 id="notation-reference">Notation Reference</h2>
 
 <dl>
   <dt>Algorithm F</dt>
@@ -212,7 +212,7 @@
   <dd>The $j$th element of the $i$th array in the multi-dimensional array $m$.</dd>
 </dl>
 
-<h2>Algorithm Feature Reference</h2>
+<h2 id="algorithm-feature-reference">Algorithm Feature Reference</h2>
 
 <dl>
   <dt>Finiteness</dt>
@@ -231,7 +231,7 @@
   <dd>Operations of an algorithm are simple enough that they can be worked out by hand.</dd>
 </dl>
 
-<h2>Algorithm E Correctness Proof Explanation</h2>
+<h2 id="algorithm-e-correctness-proof-explanation">Algorithm E Correctness Proof Explanation</h2>
 
 <p>
   Since E3 changes the values of $m$ and $n$, Knuth's goal is to demonstrate that the divisors
@@ -266,7 +266,7 @@
   $\tombstone$
 </p>
 
-<h2>Worked Example of $T_3$</h2>
+<h2 id="worked-example-of-t3">Worked Example of $T_3$</h2>
 
 <p>
   Here are the operations involved in calculating the individual values for $m$:
@@ -294,7 +294,7 @@
 
 $$T_3 = \frac{2 + 3 + 1}{3} = 2$$
 
-<h2>Explanation of Set Theory Grounding</h2>
+<h2 id="explanation-of-set-theory-grounding">Explanation of Set Theory Grounding</h2>
 
 <p>
   To understand the set theory grounding, consider step E3. The information delivered to the step,
@@ -644,7 +644,7 @@ $$T_3 = \frac{2 + 3 + 1}{3} = 2$$
   of letters, which of course can be written down and therefore worked by hand.
 </p>
 
-<h2>Using $A^*$</h2>
+<h2 id="using-a-star">Using $A^*$</h2>
 
 <p>
   Let's look at how to implement addition with the framework Knuth set forth to
@@ -815,7 +815,7 @@ $$
   </p>
 {/if}
 
-<h2>Exercise and Answer Clarifications</h2>
+<h2 id="exercise-and-answer-clarifications">Exercise and Answer Clarifications</h2>
 
 <p>
   3. It's unclear from the problem statement that assignment isn't entirely

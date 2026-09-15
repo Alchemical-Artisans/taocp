@@ -5,6 +5,7 @@
   import { base } from "$app/paths"
   import TopBar from "$lib/components/TopBar.svelte"
   import TreeNav from "$lib/components/TreeNav.svelte"
+  import RightRail from "$lib/components/RightRail.svelte"
   import { resolvePath, chapterHref } from "$lib/data/toc"
 
   let { children } = $props()
@@ -84,13 +85,15 @@
 
     {@render children()}
   </main>
+
+  <RightRail onThisPage={page.data.onThisPage ?? []} />
 </div>
 
 <style>
   .layout {
     display: grid;
-    grid-template-columns: 268px minmax(0, 1fr);
-    max-width: 1200px;
+    grid-template-columns: 268px minmax(0, 1fr) 232px;
+    max-width: 1440px;
     margin: 0 auto;
   }
 
@@ -137,6 +140,9 @@
   @media (max-width: 1100px) {
     .layout {
       grid-template-columns: 240px 1fr;
+    }
+    .layout :global(aside.rail) {
+      display: none;
     }
   }
   @media (max-width: 760px) {

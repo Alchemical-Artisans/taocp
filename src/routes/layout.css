@@ -89,6 +89,7 @@ main h4 {
   line-height: 1.25;
   margin: 2em 0 0.6em;
   text-wrap: balance;
+  scroll-margin-top: 68px;
 }
 main h2 {
   font-size: 1.5rem;

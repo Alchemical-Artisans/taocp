@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { base } from "$app/paths"
   import Spoiler from "$lib/components/Spoiler.svelte"
 </script>
 
@@ -20,7 +21,7 @@
 
   <p>
     This page covers the motivation and goals of the site. If you want to dive right in head over to <a
-      href="/vol-1/ch-1/1-1">section 1.1</a
+      href="{base}/vol-1/ch-1/1-1">section 1.1</a
     > to get started.
   </p>
 

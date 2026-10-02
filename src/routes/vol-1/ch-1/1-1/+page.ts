@@ -3,7 +3,6 @@ import type { PageLoad } from "./$types"
 export const load: PageLoad = () => {
   return {
     onThisPage: [
-      { id: "video", label: "Video" },
       { id: "euclids-algorithm", label: "Euclid's Algorithm" },
       { id: "implementation", label: "Implementation" },
       { id: "algorithm-structure", label: "Algorithm Structure" },

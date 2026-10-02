@@ -111,8 +111,6 @@
  }
 </script>
 
-<h2 id="video">Video</h2>
-
 <div class="video-embed">
   <iframe
     src="https://www.youtube-nocookie.com/embed/5agv4lW9fhY"

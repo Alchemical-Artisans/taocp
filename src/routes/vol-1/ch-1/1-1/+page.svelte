@@ -25,6 +25,19 @@
    { theta: "a", phi: "", b: 3, a: 4 },
  ])
 
+ /* A rule's index is its stage number, so the b and a columns point at rows by
+    position. Adding or removing a row therefore renumbers every rule after it,
+    and the references are left as the reader typed them rather than being
+    rewritten underneath them. */
+ function addRule() {
+   const j = a_star_rules.length
+   a_star_rules.push({ theta: "", phi: "", b: j, a: j + 1 })
+ }
+
+ function removeRule(j: number) {
+   a_star_rules.splice(j, 1)
+ }
+
  let N_candidates = $derived(
    [...new Set(a_star_rules.flatMap(({ a, b }) => [a, b]))].filter((j) => !a_star_rules[j]),
  )
@@ -718,14 +731,23 @@ $$
 </p>
 
 
-<table>
+<table class="rules">
+  <colgroup>
+    <col />
+    <col />
+    <col />
+    <col />
+    <col />
+    <col class="action-col" />
+  </colgroup>
   <thead>
     <tr>
       <th scope="col">$j$</th>
-      <th scope="col">$theta_j$</th>
-      <th scope="col">$phi_j$</th>
+      <th scope="col">$\theta_j$</th>
+      <th scope="col">$\phi_j$</th>
       <th scope="col">$b_j$</th>
       <th scope="col">$a_j$</th>
+      <th scope="col"><span class="sr-only">Remove</span></th>
     </tr>
   </thead>
   <tbody>
@@ -736,10 +758,19 @@ $$
         <td><input type="text" aria-label="phi sub {j}" bind:value={rule.phi} /></td>
         <td><input type="number" aria-label="b sub {j}" bind:value={rule.b} /></td>
         <td><input type="number" aria-label="a sub {j}" bind:value={rule.a} /></td>
+        <td
+          ><button type="button" aria-label="Remove rule {j}" onclick={() => removeRule(j)}
+            >&times;</button
+          ></td
+        >
       </tr>
     {/each}
   </tbody>
 </table>
+
+<p>
+  <button type="button" class="add-rule" onclick={addRule}>Add rule</button>
+</p>
 
 
 {#if N_candidates.length != 1}
@@ -838,6 +869,53 @@ $$
  input {
    width: 100%;
    box-sizing: border-box;
+ }
+
+ /* Six columns, so the rules table needs more room than the two- and
+    three-column tables above it. */
+ table.rules {
+   max-width: 32rem;
+ }
+
+ table.rules .action-col {
+   width: 2.5rem;
+ }
+
+ table.rules td button {
+   background: none;
+   border: none;
+   color: var(--ink-faint);
+   font: inherit;
+   font-size: 1.1rem;
+   line-height: 1;
+   cursor: pointer;
+   padding: 2px 4px;
+ }
+
+ table.rules td button:hover {
+   color: var(--danger);
+ }
+
+ table.rules td button:focus-visible,
+ .add-rule:focus-visible {
+   outline: 2px solid var(--accent);
+   outline-offset: 1px;
+ }
+
+ .add-rule {
+   background: var(--surface);
+   color: var(--ink);
+   border: 1px solid var(--line);
+   border-radius: 6px;
+   padding: 4px 10px;
+   font: inherit;
+   font-size: 0.9rem;
+   cursor: pointer;
+ }
+
+ .add-rule:hover {
+   border-color: var(--accent);
+   color: var(--accent);
  }
 
  .validation-error {

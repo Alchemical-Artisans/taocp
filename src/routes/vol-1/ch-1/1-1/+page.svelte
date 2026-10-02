@@ -111,6 +111,32 @@
  }
 </script>
 
+<h2 id="video">Video</h2>
+
+<div class="video-embed">
+  <iframe
+    src="https://www.youtube-nocookie.com/embed/5agv4lW9fhY"
+    title="TAOCP Section 1.1 video"
+    loading="lazy"
+    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+    referrerpolicy="strict-origin-when-cross-origin"
+    allowfullscreen
+  ></iframe>
+</div>
+
+<style>
+  .video-embed {
+    aspect-ratio: 16 / 9;
+    width: 100%;
+  }
+
+  .video-embed iframe {
+    width: 100%;
+    height: 100%;
+    border: 0;
+  }
+</style>
+
 <h2 id="euclids-algorithm">Euclid's Algorithm</h2>
 
 <p>

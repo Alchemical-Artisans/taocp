@@ -7,6 +7,15 @@
  import Algorithm from "$lib/components/Algorithm.svelte"
  import Step from "$lib/components/Step.svelte"
  import { SvelteSet } from "svelte/reactivity"
+ import { onMount } from "svelte"
+ import { page } from "$app/state"
+ import {
+   parseRulesCsv,
+   rulesFromSearchParams,
+   rulesToCsv,
+   rulesToShareUrl,
+   type Rule,
+ } from "$lib/algorithms/a-star/csv"
 
  let m: number | null = $state(119)
  let n: number | null = $state(544)
@@ -18,7 +27,7 @@
    return value !== null && Number.isInteger(value) && value > 0
  }
 
- let a_star_rules = $state([
+ let a_star_rules: Rule[] = $state([
    { theta: "ab", phi: "bac", b: 0, a: 1 },
    { theta: "ba", phi: "a", b: 2, a: 3 },
    { theta: "ac", phi: "ca", b: 2, a: 0 },
@@ -38,13 +47,84 @@
    a_star_rules.splice(j, 1)
  }
 
+ /* Rules travel as CSV: exported, imported and shared by link entirely in the
+    browser, since the site is prerendered and has no server to upload to. */
+ let rules_message: { kind: "error" | "status"; text: string } | null = $state(null)
+ let share_link: string | null = $state(null)
+ let csv_file_input: HTMLInputElement | null = $state(null)
+
+ function describe(error: unknown): string {
+   return error instanceof Error ? error.message : String(error)
+ }
+
+ /* A share link is read once the page is live, so the prerendered HTML stays
+    the same for every reader and hydration has the real query string. */
+ onMount(() => {
+   try {
+     const shared = rulesFromSearchParams(page.url.searchParams)
+     if (shared) a_star_rules = shared
+   } catch (error) {
+     rules_message = {
+       kind: "error",
+       text: `The rules in this link could not be read. ${describe(error)}`,
+     }
+   }
+ })
+
+ function exportRules() {
+   const url = URL.createObjectURL(new Blob([rulesToCsv(a_star_rules)], { type: "text/csv" }))
+   const link = document.createElement("a")
+   link.href = url
+   link.download = "a-star-rules.csv"
+   link.click()
+   /* Revoked a tick later: some browsers have not started the download yet. */
+   setTimeout(() => URL.revokeObjectURL(url))
+ }
+
+ async function importRules(event: Event) {
+   const input = event.currentTarget as HTMLInputElement
+   const file = input.files?.[0]
+   /* Cleared so picking the same file twice still fires a change event. */
+   input.value = ""
+   if (!file) return
+
+   try {
+     a_star_rules = parseRulesCsv(await file.text())
+     share_link = null
+     const count = a_star_rules.length
+     rules_message = {
+       kind: "status",
+       text: `Loaded ${count} rule${count === 1 ? "" : "s"} from ${file.name}.`,
+     }
+   } catch (error) {
+     rules_message = { kind: "error", text: `${file.name} could not be read. ${describe(error)}` }
+   }
+ }
+
+ async function copyShareLink() {
+   share_link = rulesToShareUrl(page.url, a_star_rules)
+   try {
+     await navigator.clipboard.writeText(share_link)
+     rules_message = { kind: "status", text: "Share link copied." }
+   } catch {
+     /* Clipboard access is refused outside a secure context, so the link is
+        shown below either way and can be copied by hand. */
+     rules_message = { kind: "status", text: "Copy the link below to share these rules." }
+   }
+ }
+
  let N_candidates = $derived(
    [...new Set(a_star_rules.flatMap(({ a, b }) => [a, b]))].filter((j) => !a_star_rules[j]),
  )
 
  let test_input = $state("aaabbbbb")
 
- const MAX_A_STAR_STEPS = 200
+ /* How many steps to run before giving up, so a reader exploring rules that
+    never terminate decides how long to wait rather than the page deciding. */
+ let max_steps: number | null = $state(1000)
+ let step_limit = $derived(isPositiveInteger(max_steps) ? max_steps : 0)
+
+ let collapse_trace = $state(false)
 
  /** Splits a string into runs of a repeated character, e.g. "aaabbbbb" -> [{char: "a", count: 3}, {char: "b", count: 5}]. */
  function collapseRuns(value: string): { char: string; count: number }[] {
@@ -66,7 +146,7 @@
    states.push({ string: current, stage: a_star_rules[stage] ? stage : null })
 
    let guard = 0
-   while (a_star_rules[stage] && guard < MAX_A_STAR_STEPS) {
+   while (a_star_rules[stage] && guard < step_limit) {
      const rule = a_star_rules[stage]
      const index = rule.theta.length > 0 ? current.indexOf(rule.theta) : -1
      if (index === -1) {
@@ -98,6 +178,21 @@
      index += 1
    }
    return groups
+ })
+
+ /* The whole application collapsed to the string that went in and the one
+    that came out, for when only the result matters. */
+ let a_star_ends = $derived.by(() => {
+   const states = a_star_trace.states
+   const lastIndex = states.length - 1
+   const hidden = Math.max(lastIndex - 1, 0)
+   return {
+     first: states[0],
+     final: states[lastIndex],
+     lastIndex,
+     hidden,
+     hiddenLabel: hidden === 1 ? "1" : "1\u2026" + (lastIndex - 1),
+   }
  })
 
  let expanded_groups = new SvelteSet<number>()
@@ -792,9 +887,42 @@ $$
   </tbody>
 </table>
 
-<p>
-  <button type="button" class="add-rule" onclick={addRule}>Add rule</button>
+<p class="rule-actions">
+  <button type="button" class="tool-button" onclick={addRule}>Add rule</button>
+  <button type="button" class="tool-button" onclick={exportRules}>Export CSV</button>
+  <button type="button" class="tool-button" onclick={() => csv_file_input?.click()}
+    >Import CSV</button
+  >
+  <button type="button" class="tool-button" onclick={copyShareLink}>Copy share link</button>
+  <input
+    class="file-input"
+    type="file"
+    accept=".csv,text/csv"
+    aria-hidden="true"
+    tabindex="-1"
+    bind:this={csv_file_input}
+    onchange={importRules}
+  />
 </p>
+
+<p class="rule-message" aria-live="polite">
+  {#if rules_message}<span class:validation-error={rules_message.kind === "error"}
+      >{rules_message.text}</span
+    >{/if}
+</p>
+
+{#if share_link}
+  <p>
+    <input
+      class="share-link"
+      type="text"
+      readonly
+      aria-label="Share link"
+      value={share_link}
+      onfocus={(event) => event.currentTarget.select()}
+    />
+  </p>
+{/if}
 
 
 {#if N_candidates.length != 1}
@@ -814,9 +942,24 @@ $$
   <input type="text" aria-label="Test string" bind:value={test_input} />
 </p>
 
+<p class="trace-controls">
+  <label>
+    Maximum steps
+    <input type="number" min="1" bind:value={max_steps} />
+  </label>
+  <label>
+    <input type="checkbox" bind:checked={collapse_trace} />
+    Collapse to start and end
+  </label>
+</p>
+
+{#if step_limit === 0}
+  <p class="validation-error">The maximum number of steps must be a positive integer.</p>
+{/if}
+
 {#snippet aStarString(value)}{#if value === ""} {:else}{#each collapseRuns(value) as run}{run.char}{#if run.count > 1}<sup>{run.count}</sup>{/if}{/each}{/if}{/snippet}
 
-<table class="trace">
+<table class="trace a-star-trace">
   <colgroup>
     <col />
     <col />
@@ -830,7 +973,28 @@ $$
     </tr>
   </thead>
   <tbody>
-    {#each a_star_groups as group, gi (gi)}
+    {#if collapse_trace}
+      <tr>
+        <td>0</td>
+        <td>{@render aStarString(a_star_ends.first.string)}</td>
+        <td>{a_star_ends.first.stage ?? " "}</td>
+      </tr>
+      {#if a_star_ends.hidden > 0}
+        <tr>
+          <td>{a_star_ends.hiddenLabel}</td>
+          <td class="elided">&vellip;</td>
+          <td>&nbsp;</td>
+        </tr>
+      {/if}
+      {#if a_star_ends.lastIndex > 0}
+        <tr>
+          <td>{a_star_ends.lastIndex}</td>
+          <td>{@render aStarString(a_star_ends.final.string)}</td>
+          <td>{a_star_ends.final.stage ?? " "}</td>
+        </tr>
+      {/if}
+    {:else}
+      {#each a_star_groups as group, gi (gi)}
       {#if group.states.length === 1}
         <tr>
           <td>{group.startIndex}</td>
@@ -860,13 +1024,14 @@ $$
           </tr>
         {/each}
       {/if}
-    {/each}
+      {/each}
+    {/if}
   </tbody>
 </table>
 
 {#if !a_star_trace.terminated}
   <p class="validation-error">
-    The algorithm didn't reach a terminal stage within {MAX_A_STAR_STEPS} steps for this input.
+    The algorithm didn't reach a terminal stage within {step_limit} steps for this input.
   </p>
 {/if}
 
@@ -921,12 +1086,62 @@ $$
  }
 
  table.rules td button:focus-visible,
- .add-rule:focus-visible {
+ .tool-button:focus-visible {
    outline: 2px solid var(--accent);
    outline-offset: 1px;
  }
 
- .add-rule {
+ .rule-actions {
+   display: flex;
+   flex-wrap: wrap;
+   gap: 0.5rem;
+ }
+
+ /* Reserved so a message about an import or a share link does not shift the
+    table and trace below it. */
+ .rule-message {
+   min-height: 1.2em;
+ }
+
+ /* Hidden because the Import CSV button opens it; a button keeps the row of
+    controls consistent and keyboard reachable. */
+ .file-input {
+   display: none;
+ }
+
+ .trace-controls {
+   display: flex;
+   flex-wrap: wrap;
+   align-items: center;
+   gap: 0.4rem 1.5rem;
+ }
+
+ .trace-controls label {
+   display: flex;
+   align-items: center;
+   gap: 0.4rem;
+ }
+
+ /* The full-width input rule above suits the text boxes, not these two. */
+ .trace-controls input[type="number"] {
+   width: 6rem;
+ }
+
+ .trace-controls input[type="checkbox"] {
+   width: auto;
+ }
+
+ table.trace td.elided {
+   text-align: center;
+   color: var(--ink-faint);
+ }
+
+ .share-link {
+   max-width: 32rem;
+   font-size: 0.85rem;
+ }
+
+ .tool-button {
    background: var(--surface);
    color: var(--ink);
    border: 1px solid var(--line);
@@ -937,7 +1152,7 @@ $$
    cursor: pointer;
  }
 
- .add-rule:hover {
+ .tool-button:hover {
    border-color: var(--accent);
    color: var(--accent);
  }

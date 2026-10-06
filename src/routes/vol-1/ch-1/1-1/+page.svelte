@@ -217,19 +217,6 @@
   ></iframe>
 </div>
 
-<style>
-  .video-embed {
-    aspect-ratio: 16 / 9;
-    width: 100%;
-  }
-
-  .video-embed iframe {
-    width: 100%;
-    height: 100%;
-    border: 0;
-  }
-</style>
-
 <h2 id="euclids-algorithm">Euclid's Algorithm</h2>
 
 <p>
@@ -1049,6 +1036,17 @@ $$
 </p>
 
 <style>
+ .video-embed {
+   aspect-ratio: 16 / 9;
+   width: 100%;
+ }
+
+ .video-embed iframe {
+   width: 100%;
+   height: 100%;
+   border: 0;
+ }
+
  table {
    width: 100%;
    max-width: 26rem;

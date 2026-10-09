@@ -18,12 +18,7 @@
   /* A recurrence, a closed form to test against it, and the summation they both
     come from — the shape of every induction argument in the section, so the
     tool opens on one rather than on an empty field. */
- const openingFormulas = [
-   "x^2",
-   "2x - 1",
-   "\\sum_{k=1}^{x} g(k)",
-   recurrence,
- ]
+  const openingFormulas = ["x^2", "2x - 1", "\\sum_{k=1}^{x} g(k)", recurrence]
 </script>
 
 <h2 id="closed-forms">Closed Forms</h2>

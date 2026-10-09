@@ -180,6 +180,7 @@ main thead th {
   color: var(--ink-faint);
 }
 
+main tbody tr:last-child th,
 main tbody tr:last-child td {
   border-bottom: none;
 }

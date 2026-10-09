@@ -290,8 +290,14 @@
     color: var(--ink-faint);
   }
 
+  /* A value and its decimal read as one entry, so they stay on one line and the
+     column widens to fit rather than the decimal dropping underneath. */
+  .values td {
+    white-space: nowrap;
+  }
+
   .approx {
-    display: block;
+    margin-left: 0.5em;
     color: var(--ink-faint);
     font-size: 0.78rem;
   }

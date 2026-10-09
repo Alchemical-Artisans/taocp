@@ -39,12 +39,6 @@
 
 <h2 id="extended-euclids-algorithm">Extended Euclid's Algorithm</h2>
 
-<p>
-  Euclid's algorithm can also keep track of how its remainders are built from the original numbers.
-  Enter values for $m$ and $n$ to see every variable at each iteration; in the last row, $d$ is the
-  greatest common divisor and $am + bn = d$.
-</p>
-
 <div class="inputs">
   <label>$m$ <input name="m" type="number" aria-label="m" bind:value={m} /></label>
   <label>$n$ <input name="n" type="number" aria-label="n" bind:value={n} /></label>

@@ -39,14 +39,11 @@
 
 <h2 id="extended-euclids-algorithm">Extended Euclid's Algorithm</h2>
 
-<div class="inputs">
-  <label>$m$ <input name="m" type="number" aria-label="m" bind:value={m} /></label>
-  <label>$n$ <input name="n" type="number" aria-label="n" bind:value={n} /></label>
-</div>
-
 <table class="trace">
   <thead>
     <tr>
+      <th scope="col">$m$</th>
+      <th scope="col">$n$</th>
       <th scope="col">$a'$</th>
       <th scope="col">$a$</th>
       <th scope="col">$b'$</th>
@@ -58,9 +55,17 @@
     </tr>
   </thead>
   <tbody>
-    {#if steps}
-      {#each steps as step (step.c)}
-        <tr class:result={step.r === 0}>
+    {#each steps ?? [null] as step, i (i)}
+      <tr class:result={step?.r === 0}>
+        {#if i === 0}
+          <!-- The first row carries the two inputs, as in section 1.1. -->
+          <td><input name="m" type="number" aria-label="m" bind:value={m} /></td>
+          <td><input name="n" type="number" aria-label="n" bind:value={n} /></td>
+        {:else if step}
+          <td>{step.m}</td>
+          <td>{step.n}</td>
+        {/if}
+        {#if step}
           <td>{step.a_prime}</td>
           <td>{step.a}</td>
           <td>{step.b_prime}</td>
@@ -69,25 +74,17 @@
           <td>{step.d}</td>
           <td>{step.q}</td>
           <td>{step.r}</td>
-        </tr>
-      {/each}
-    {:else}
-      <tr>
-        <td colspan="8" class="validation-error">m and n must both be positive integers.</td>
+        {:else}
+          <td colspan="8" class="validation-error">m and n must both be positive integers.</td>
+        {/if}
       </tr>
-    {/if}
+    {/each}
   </tbody>
 </table>
 
 <style>
-  .inputs {
-    display: flex;
-    gap: 1.2rem;
-    margin-bottom: 0.8rem;
-  }
-
-  .inputs input {
-    width: 6rem;
+  table.trace input {
+    width: 5rem;
   }
 
   table.trace {

@@ -49,13 +49,14 @@ test("labels each line with the name the other lines call it by", async ({ page 
   await enter(page, { f: "x", g: "x^2", h: "x^3" })
 
   await expect(row(page, 2)).toHaveText(["3", "3", "9", "27"])
-  /* The names head the columns too, since that is the reader's handle on them.
-     Read from the annotation, as the rows are: KaTeX writes the same text into
-     its HTML, its MathML and the annotation, so the heading reads triple. */
+  /* The columns are headed by the whole equation, name included, so a column
+     reads without looking back up at the boxes. Read from the annotation, as
+     the rows are: KaTeX writes the same text into its HTML, its MathML and the
+     annotation, so the heading reads triple. */
   await expect(page.locator("table.values thead th .katex-mathml annotation")).toHaveText([
-    "f(x)",
-    "g(x)",
-    "h(x)",
+    "f(x) = x",
+    "g(x) = x^2",
+    "h(x) = x^3",
   ])
 })
 

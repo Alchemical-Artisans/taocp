@@ -170,7 +170,7 @@
           <tr>
             <th scope="col">$x$</th>
             {#each columns as column (column.name)}
-              <th scope="col"><Tex tex={signature(column.name)} /></th>
+              <th scope="col"><Tex tex="{signature(column.name)} = {column.tex}" /></th>
             {/each}
           </tr>
         </thead>

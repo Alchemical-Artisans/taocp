@@ -1,9 +1,15 @@
 <script lang="ts">
-  import Algorithm from "$lib/components/Algorithm.svelte"
-  import CodeTabs from "$lib/components/CodeTabs.svelte"
   import FormulaTable from "$lib/components/FormulaTable.svelte"
-  import Step from "$lib/components/Step.svelte"
-  import extendedSource from "$lib/algorithms/extended-euclid/faithful.ts?raw"
+  import { trace } from "$lib/algorithms/extended-euclid/trace"
+
+  let m: number | null = $state(1769)
+  let n: number | null = $state(551)
+
+  const steps = $derived(isPositiveInteger(m) && isPositiveInteger(n) ? trace(m, n) : null)
+
+  function isPositiveInteger(value: number | null): value is number {
+    return value !== null && Number.isInteger(value) && value > 0
+  }
 
   /* Written over four lines rather than one: a case analysis is the formula a
     reader is most likely to want broken up, so the tool opens showing that it
@@ -33,29 +39,73 @@
 
 <h2 id="extended-euclids-algorithm">Extended Euclid's Algorithm</h2>
 
-<Algorithm letter="E" name="Extended Euclid's algorithm">
-  {#snippet intro()}
-    Given positive integers $m$ and $n$, we compute their greatest common divisor $d$ and two
-    integers $a$ and $b$ such that $am + bn = d$.
-  {/snippet}
+<div class="inputs">
+  <label>$m$ <input name="m" type="number" aria-label="m" bind:value={m} /></label>
+  <label>$n$ <input name="n" type="number" aria-label="n" bind:value={n} /></label>
+</div>
 
-  <Step n={1}
-    >[Initialize.] Set $a' \leftarrow b \leftarrow 1$, $a \leftarrow b' \leftarrow 0$, $c \leftarrow
-    m$, $d \leftarrow n$.</Step
-  >
-  <Step n={2}>[Divide.] Set $q \leftarrow \lfloor c/d \rfloor$ and $r \leftarrow c \bmod d$.</Step>
-  <Step n={3}
-    >[Remainder zero?] If $r = 0$, the algorithm terminates; $\gcd(m, n) = d$ and $am + bn = d$.</Step
-  >
-  <Step n={4}
-    >[Recycle.] Set $c \leftarrow d$, $d \leftarrow r$, $t \leftarrow a'$, $a' \leftarrow a$, $a
-    \leftarrow t - qa$, $t \leftarrow b'$, $b' \leftarrow b$, $b \leftarrow t - qb$, and go back to
-    step E2.</Step
-  >
-</Algorithm>
+<table class="trace">
+  <thead>
+    <tr>
+      <th scope="col">$a'$</th>
+      <th scope="col">$a$</th>
+      <th scope="col">$b'$</th>
+      <th scope="col">$b$</th>
+      <th scope="col">$c$</th>
+      <th scope="col">$d$</th>
+      <th scope="col">$q$</th>
+      <th scope="col">$r$</th>
+    </tr>
+  </thead>
+  <tbody>
+    {#if steps}
+      {#each steps as step (step.c)}
+        <tr class:result={step.r === 0}>
+          <td>{step.a_prime}</td>
+          <td>{step.a}</td>
+          <td>{step.b_prime}</td>
+          <td>{step.b}</td>
+          <td>{step.c}</td>
+          <td>{step.d}</td>
+          <td>{step.q}</td>
+          <td>{step.r}</td>
+        </tr>
+      {/each}
+    {:else}
+      <tr>
+        <td colspan="8" class="validation-error">m and n must both be positive integers.</td>
+      </tr>
+    {/if}
+  </tbody>
+</table>
 
-<CodeTabs>
-  <!-- Rendered from the module the unit tests import, so the page can't drift
-       from the code that is actually verified. -->
-  {#snippet faithful()}{extendedSource}{/snippet}
-</CodeTabs>
+<style>
+  .inputs {
+    display: flex;
+    gap: 1.2rem;
+    margin-bottom: 0.8rem;
+  }
+
+  .inputs input {
+    width: 6rem;
+  }
+
+  table.trace {
+    max-width: 100%;
+  }
+
+  table.trace td,
+  table.trace th {
+    padding: 4px 10px;
+    text-align: right;
+  }
+
+  tr.result {
+    font-weight: 700;
+    color: var(--accent);
+  }
+
+  .validation-error {
+    text-align: left;
+  }
+</style>

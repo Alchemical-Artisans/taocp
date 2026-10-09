@@ -73,6 +73,12 @@ describe("scan", () => {
     expect(texOf("<p>$a &lt; b$</p>")).toEqual(["a < b"])
   })
 
+  it("decodes escaped braces, which is how math survives the formatter", () => {
+    expect(texOf("<p>$\\frac&lbrace;n^2+n&rbrace;&lbrace;2&rbrace;$</p>")).toEqual([
+      "\\frac{n^2+n}{2}",
+    ])
+  })
+
   it("ignores empty delimiters", () => {
     expect(texOf("<p>$$$$</p>")).toEqual([])
   })

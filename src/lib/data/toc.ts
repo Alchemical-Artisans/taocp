@@ -4,11 +4,19 @@
 
 import { base } from "$app/paths"
 
+export type TocSubsection = {
+  id: string
+  number: string
+  title: string
+  slug: string
+}
+
 export type TocSection = {
   id: string
   number: string
   title: string
   slug: string
+  subsections: TocSubsection[]
 }
 
 export type TocChapter = {
@@ -39,7 +47,23 @@ export const toc: TocVolume[] = [
         number: "1",
         title: "Basic Concepts",
         slug: "ch-1",
-        sections: [{ id: "1-1", number: "1.1", title: "Algorithms", slug: "1-1" }],
+        sections: [
+          { id: "1-1", number: "1.1", title: "Algorithms", slug: "1-1", subsections: [] },
+          {
+            id: "1-2",
+            number: "1.2",
+            title: "Mathematical Preliminaries",
+            slug: "1-2",
+            subsections: [
+              {
+                id: "1-2-1",
+                number: "1.2.1",
+                title: "Mathematical Induction",
+                slug: "1-2-1",
+              },
+            ],
+          },
+        ],
       },
     ],
   },
@@ -53,15 +77,25 @@ export function sectionHref(volume: TocVolume, chapter: TocChapter, section: Toc
   return `${base}/${volume.slug}/${chapter.slug}/${section.slug}`
 }
 
+export function subsectionHref(
+  volume: TocVolume,
+  chapter: TocChapter,
+  section: TocSection,
+  subsection: TocSubsection,
+): string {
+  return `${sectionHref(volume, chapter, section)}/${subsection.slug}`
+}
+
 export type TocPath = {
   volume: TocVolume
   chapter?: TocChapter
   section?: TocSection
+  subsection?: TocSubsection
 }
 
 export function resolvePath(pathname: string): TocPath | undefined {
   const relative = base && pathname.startsWith(base) ? pathname.slice(base.length) : pathname
-  const [volumeSlug, chapterSlug, sectionSlug] = relative.split("/").filter(Boolean)
+  const [volumeSlug, chapterSlug, sectionSlug, subsectionSlug] = relative.split("/").filter(Boolean)
 
   const volume = toc.find((v) => v.slug === volumeSlug)
   if (!volume) return undefined
@@ -71,6 +105,12 @@ export function resolvePath(pathname: string): TocPath | undefined {
 
   const section =
     chapter && sectionSlug ? chapter.sections.find((s) => s.slug === sectionSlug) : undefined
+  if (sectionSlug && !section) return { volume, chapter }
 
-  return { volume, chapter, section }
+  const subsection =
+    section && subsectionSlug
+      ? section.subsections.find((s) => s.slug === subsectionSlug)
+      : undefined
+
+  return { volume, chapter, section, subsection }
 }

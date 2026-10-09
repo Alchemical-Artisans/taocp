@@ -1,7 +1,7 @@
 <script lang="ts">
   import { page } from "$app/state"
   import { SvelteSet } from "svelte/reactivity"
-  import { toc, resolvePath, chapterHref, sectionHref } from "$lib/data/toc"
+  import { toc, resolvePath, chapterHref, sectionHref, subsectionHref } from "$lib/data/toc"
 
   let { open = false, onClose }: { open?: boolean; onClose?: () => void } = $props()
 
@@ -92,14 +92,39 @@
             <ul>
               {#each chapter.sections as section (section.id)}
                 <li>
-                  <a
-                    href={sectionHref(volume, chapter, section)}
-                    class:active={current?.section?.id === section.id}
-                    aria-current={current?.section?.id === section.id ? "page" : undefined}
-                  >
-                    {section.number}
-                    {section.title}
-                  </a>
+                  {#if section.subsections.length === 0}
+                    <a
+                      href={sectionHref(volume, chapter, section)}
+                      class:active={current?.section?.id === section.id && !current?.subsection}
+                      aria-current={current?.section?.id === section.id && !current?.subsection
+                        ? "page"
+                        : undefined}
+                    >
+                      {section.number}
+                      {section.title}
+                    </a>
+                  {:else}
+                    <span class="section-head">
+                      {section.number}
+                      {section.title}
+                    </span>
+                    <ul>
+                      {#each section.subsections as subsection (subsection.id)}
+                        <li>
+                          <a
+                            href={subsectionHref(volume, chapter, section, subsection)}
+                            class:active={current?.subsection?.id === subsection.id}
+                            aria-current={current?.subsection?.id === subsection.id
+                              ? "page"
+                              : undefined}
+                          >
+                            {subsection.number}
+                            {subsection.title}
+                          </a>
+                        </li>
+                      {/each}
+                    </ul>
+                  {/if}
                 </li>
               {/each}
             </ul>
@@ -186,6 +211,16 @@
     text-decoration: none;
     border-radius: 6px;
     border-left: 2px solid transparent;
+  }
+  /* A section that only groups subsections has no page of its own, so it reads
+     as a label rather than a dead link. */
+  .section-head {
+    display: block;
+    padding: 5px 10px 5px 34px;
+    color: var(--ink-faint);
+  }
+  li li a {
+    padding-left: 48px;
   }
   li a:hover {
     background: var(--surface);

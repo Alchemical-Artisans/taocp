@@ -148,10 +148,18 @@ function isSpace(char: string | undefined): boolean {
   return char === undefined || /\s/.test(char)
 }
 
+/**
+ * `&lbrace;` and `&rbrace;` are here for the formatter rather than for Svelte:
+ * prettier reads a braced group inside markup as an expression and reformats it
+ * as JavaScript, which turns `\frac{n^2+n}{2}` into `\frac{n ^ (2 + n)}{2}`
+ * without complaint. Escaped braces come through untouched.
+ */
 function decodeEntities(value: string): string {
   return value
     .replace(/&lt;/g, "<")
     .replace(/&gt;/g, ">")
+    .replace(/&lbrace;/g, "{")
+    .replace(/&rbrace;/g, "}")
     .replace(/&quot;/g, '"')
     .replace(/&#39;/g, "'")
     .replace(/&amp;/g, "&")

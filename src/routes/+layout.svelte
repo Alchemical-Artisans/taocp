@@ -6,7 +6,7 @@
   import TopBar from "$lib/components/TopBar.svelte"
   import TreeNav from "$lib/components/TreeNav.svelte"
   import RightRail from "$lib/components/RightRail.svelte"
-  import { resolvePath, chapterHref } from "$lib/data/toc"
+  import { resolvePath, chapterHref, sectionHref } from "$lib/data/toc"
 
   let { children } = $props()
 
@@ -69,11 +69,28 @@
         {/if}
         {#if current.section}
           <span>›</span>
-          <span aria-current="page">{current.section.number}</span>
+          {#if current.section.subsections.length === 0}
+            <a
+              href={sectionHref(current.volume, current.chapter!, current.section)}
+              aria-current={current.subsection ? undefined : "page"}
+            >
+              {current.section.number}
+            </a>
+          {:else}
+            <span aria-current={current.subsection ? undefined : "page"}
+              >{current.section.number}</span
+            >
+          {/if}
+        {/if}
+        {#if current.subsection}
+          <span>›</span>
+          <span aria-current="page">{current.subsection.number}</span>
         {/if}
       </nav>
       <h1>
-        {#if current.section}
+        {#if current.subsection}
+          <span class="secno">{current.subsection.number}</span>{current.subsection.title}
+        {:else if current.section}
           <span class="secno">{current.section.number}</span>{current.section.title}
         {:else if current.chapter}
           <span class="secno">{current.chapter.number}</span>{current.chapter.title}

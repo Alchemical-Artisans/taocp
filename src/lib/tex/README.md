@@ -35,6 +35,19 @@ comments, `{...}` expressions and the bodies of `script`, `style`, `pre` and
   `{...}` expression is left alone, so runes and shell prompts are safe.
 - `<` and `>` need to be `\lt`, `\gt`, `&lt;` or `&gt;`, because Svelte reads a
   bare `<` as the start of a tag.
+- Braces are fine as they are, except where what they hold also parses as
+  JavaScript: prettier reformats `$\frac{n^2+n}{2}$` into `$\frac{n ^ (2 + n)}{2}$`,
+  quietly changing the math. Write `&lbrace;` and `&rbrace;` to put such a group
+  out of the formatter's reach.
+
+## Math a reader types
+
+Build-time typesetting cannot reach an expression that does not exist until a
+reader enters it, so `$lib/components/Tex.svelte` typesets those in the browser
+with KaTeX instead. It is used only by interactive tools — the tool in 1.2.1
+being the first — and never for prose, which stays on the pipeline above. KaTeX
+is a fraction of MathJax's weight and cut from the same Computer Modern cloth as
+`mathjax-newcm`, so the two sit together without a visible seam.
 
 ## Adding a TeX package
 

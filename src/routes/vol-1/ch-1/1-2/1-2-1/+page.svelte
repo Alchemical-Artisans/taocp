@@ -47,8 +47,6 @@
 <table class="trace">
   <thead>
     <tr>
-      <th scope="col">$m$</th>
-      <th scope="col">$n$</th>
       <th scope="col">$a'$</th>
       <th scope="col">$a$</th>
       <th scope="col">$b'$</th>
@@ -63,8 +61,6 @@
     {#if steps}
       {#each steps as step (step.c)}
         <tr class:result={step.r === 0}>
-          <td>{step.m}</td>
-          <td>{step.n}</td>
           <td>{step.a_prime}</td>
           <td>{step.a}</td>
           <td>{step.b_prime}</td>
@@ -77,7 +73,7 @@
       {/each}
     {:else}
       <tr>
-        <td colspan="10" class="validation-error">m and n must both be positive integers.</td>
+        <td colspan="8" class="validation-error">m and n must both be positive integers.</td>
       </tr>
     {/if}
   </tbody>

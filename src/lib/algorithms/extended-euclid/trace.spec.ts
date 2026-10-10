@@ -7,8 +7,6 @@ const last = <T>(items: T[]) => items[items.length - 1]
 describe("extended trace", () => {
   it("opens on E1's initial values", () => {
     expect(trace(1769, 551)[0]).toEqual({
-      m: 1769,
-      n: 551,
       a_prime: 1,
       a: 0,
       b_prime: 0,
@@ -23,12 +21,6 @@ describe("extended trace", () => {
   it("finds the coefficients for 1769 and 551", () => {
     const { a, b, d } = last(trace(1769, 551))
     expect({ a, b, d }).toEqual({ a: 5, b: -16, d: 29 })
-  })
-
-  it("keeps m and n on every step, since they are variables too", () => {
-    for (const step of trace(1769, 551)) {
-      expect([step.m, step.n]).toEqual([1769, 551])
-    }
   })
 
   it("reaches a zero remainder exactly once, on the last step", () => {

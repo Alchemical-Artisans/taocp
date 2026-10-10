@@ -1,7 +1,5 @@
 /** The variables of Algorithm E as step E2 finds them, with q and r just computed. */
 export type Step = {
-  m: number
-  n: number
   a_prime: number
   a: number
   b_prime: number
@@ -36,7 +34,7 @@ export function trace(m: number, n: number): Step[] {
     // E2
     const q = Math.floor(c / d)
     const r = c % d
-    steps.push({ m, n, a_prime, a, b_prime, b, c, d, q, r })
+    steps.push({ a_prime, a, b_prime, b, c, d, q, r })
 
     // E3
     if (r === 0) return steps

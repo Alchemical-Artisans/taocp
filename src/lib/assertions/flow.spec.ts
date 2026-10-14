@@ -1,37 +1,50 @@
 import { describe, expect, it } from "vitest"
-import { chart, obligationTex, obligations, parse } from "./flow"
+import {
+  build,
+  chart,
+  letterError,
+  links,
+  obligationTex,
+  obligations,
+  type Endpoint,
+  type Row,
+} from "./flow"
 
-const SKETCH = [
-  "Algorithm X",
-  "A1 [Start => X1]: Initial assertion",
-  "X1: something",
-  "A2 [X1 => X2]: something",
-  "X2: If condition, terminate",
-  "A3 [X2 => End]: Final assertion",
-  "A4 [X2 => X3]: something",
-  "X3: Go back to X1",
-  "A5 [X3 => X1]: something",
-].join("\n")
+const step = (text: string): Row => ({ kind: "step", text })
+const assertion = (from: Endpoint, to: Endpoint, text = ""): Row => ({
+  kind: "assertion",
+  from,
+  to,
+  text,
+})
 
-const edges = (source: string) =>
-  parse(source).edges.map(({ from, to, condition }) =>
+const SKETCH: Row[] = [
+  assertion("start", 1, "Initial assertion"),
+  step("something"),
+  assertion(1, 2, "something"),
+  step("If condition, terminate"),
+  assertion(2, "end", "Final assertion"),
+  assertion(2, 3, "something"),
+  step("Go back to X1"),
+  assertion(3, 1, "something"),
+]
+
+const edges = (rows: Row[], letter = "X") =>
+  build(letter, rows).edges.map(({ from, to, condition }) =>
     condition ? `${from} ${condition.negated ? "¬" : ""}${condition.text} ${to}` : `${from} ${to}`,
   )
 
-const proof = (source: string, step: string) => {
-  const flow = parse(source)
-  return obligations(flow, step).map(({ pre, condition, post }) => {
+const proof = (rows: Row[], id: string) =>
+  obligations(build("X", rows), id).map(({ pre, condition, post }) => {
     const test = condition ? ` ∧ ${condition.negated ? "¬" : ""}${condition.text}` : ""
     return `${pre ?? "?"}${test} ⇒ ${post ?? "?"}`
   })
-}
 
-describe("parse", () => {
-  it("reads steps and the assertions between them", () => {
-    const flow = parse(SKETCH)
+describe("build", () => {
+  it("numbers steps and assertions apart, in the order they are written", () => {
+    const flow = build("X", SKETCH)
     expect(flow.errors).toEqual([])
-    expect(flow.letter).toBe("X")
-    expect(flow.steps.map((step) => step.id)).toEqual(["X1", "X2", "X3"])
+    expect(flow.steps.map((s) => s.id)).toEqual(["X1", "X2", "X3"])
     expect(flow.assertions.map(({ id, from, to }) => `${id} ${from} ${to}`)).toEqual([
       "A1 Start X1",
       "A2 X1 X2",
@@ -51,18 +64,14 @@ describe("parse", () => {
     ])
   })
 
-  it("letters the algorithm X when it is not named", () => {
-    expect(parse("X1. Go on.").letter).toBe("X")
-  })
-
-  it("takes the letter from the heading, as 1.1 writes it", () => {
-    const flow = parse(
+  it("letters the steps by the letter given, in either case", () => {
+    const flow = build(
+      "f",
       [
-        "Algorithm F (Factorial). Given a positive integer $n$.",
-        "F1. [Initialize f.] Set $f \\gets n$.",
-        "F2. [Is it 1?] If $n = 1$, the algorithm terminates; $f$ is the answer.",
-        "F3. [Reduce.] Set $n \\gets n - 1$, $f \\gets f \\cdot n$, and go back to step F2.",
-      ].join("\n"),
+        "[Initialize f.] Set $f \\gets n$.",
+        "[Is it 1?] If $n = 1$, the algorithm terminates; $f$ is the answer.",
+        "[Reduce.] Set $n \\gets n - 1$, $f \\gets f \\cdot n$, and go back to step F2.",
+      ].map(step),
     )
     expect(flow.errors).toEqual([])
     expect(flow.letter).toBe("F")
@@ -76,63 +85,54 @@ describe("parse", () => {
     ])
   })
 
-  it("ends a commaed condition at the first comma outside the maths", () => {
-    const [, branch] = parse("X1. If $(a, b) = 0$, terminate.").edges
+  it("ends a condition at the first comma outside the maths", () => {
+    const [, branch] = build("X", [step("If $(a, b) = 0$, terminate.")]).edges
     expect(branch.condition).toEqual({ text: "$(a, b) = 0$", negated: false })
   })
 
   it("sends the other arm wherever otherwise says", () => {
-    expect(edges("X1. If $a$, go to X3; otherwise go to X2.\nX2. Go on.\nX3. Terminate.")).toEqual([
-      "Start X1",
-      "X1 $a$ X3",
-      "X1 ¬$a$ X2",
-      "X2 X3",
-      "X3 End",
-    ])
+    expect(
+      edges([step("If $a$, go to X3; otherwise go to X2."), step("Go on."), step("Terminate.")]),
+    ).toEqual(["Start X1", "X1 $a$ X3", "X1 ¬$a$ X2", "X2 X3", "X3 End"])
   })
 
   it("does not branch on an If with nowhere to go", () => {
-    expect(edges("X1. If $a < 0$, set $a \\gets -a$.\nX2. Terminate.")).toEqual([
+    expect(edges([step("If $a < 0$, set $a \\gets -a$."), step("Terminate.")])).toEqual([
       "Start X1",
       "X1 X2",
       "X2 End",
     ])
   })
 
-  it("runs a line on into the step above it", () => {
-    expect(parse("X1. Set $a \\gets 0$\nand terminate.").steps[0].body).toBe(
-      "Set $a \\gets 0$ and terminate.",
-    )
-  })
-
   it("says what is wrong rather than guessing", () => {
     expect(
-      parse(
-        [
-          "stray",
-          "X1. Go to X7.",
-          "X1. Again.",
-          "Y2. Elsewhere.",
-          "A1 [X1 => X9]: missing",
-          "A2 [Start => End]: untaken",
-          "A3. no arrow",
-        ].join("\n"),
-      ).errors,
+      build("X", [
+        step("Go to X7."),
+        assertion(1, 9, "missing"),
+        assertion("start", "end", "untaken"),
+        assertion("end", 1, "backwards"),
+      ]).errors,
     ).toEqual([
-      "Line 1 is neither a step nor an assertion.",
-      "A3 needs the arrow it sits on, as in [X1 => X2].",
-      "X1 is written twice.",
-      "Y2 is not a step of Algorithm X.",
       "X1 goes to X7, which is not a step.",
       "A1 names X9, which is not a step.",
       "A2 sits on Start ⇒ End, which no step takes.",
+      "A3 runs backwards: arrows leave Start and enter End.",
     ])
   })
 
-  it("will not letter an algorithm A", () => {
-    expect(parse("Algorithm A").errors).toEqual([
-      "Algorithm A would share its labels with the assertions.",
-    ])
+  it("falls back to X while the letter cannot be used", () => {
+    const flow = build("", [step("Terminate.")])
+    expect(flow.letter).toBe("X")
+    expect(flow.errors).toEqual(["The algorithm's letter must be a single letter."])
+  })
+})
+
+describe("letterError", () => {
+  it("takes one letter other than A", () => {
+    expect(letterError("x")).toBeNull()
+    expect(letterError("XY")).toBe("The algorithm's letter must be a single letter.")
+    expect(letterError("3")).toBe("The algorithm's letter must be a single letter.")
+    expect(letterError("a")).toBe("Algorithm A would share its labels with the assertions.")
   })
 })
 
@@ -147,13 +147,16 @@ describe("obligations", () => {
   })
 
   it("leaves a gap where an arrow carries no assertion", () => {
-    expect(proof("A1 [Start => X1]: a\nX1. Terminate.", "X1")).toEqual(["A1 ⇒ ?"])
+    expect(proof([assertion("start", 1, "a"), step("Terminate.")], "X1")).toEqual(["A1 ⇒ ?"])
   })
 
   it("typesets prose in a condition as text and its maths as maths", () => {
-    const [, otherwise] = obligations(parse(SKETCH.replace("condition", "$r = 0$")), "X2")
+    const rows = SKETCH.map((row) =>
+      row.kind === "step" ? { ...row, text: row.text.replace("condition", "$r = 0$") } : row,
+    )
+    const [, otherwise] = obligations(build("X", rows), "X2")
     expect(obligationTex(otherwise)).toBe("\\text{A2} \\land \\lnot(r = 0) \\Rightarrow \\text{A4}")
-    const [taken] = obligations(parse(SKETCH), "X2")
+    const [taken] = obligations(build("X", SKETCH), "X2")
     expect(obligationTex(taken)).toBe(
       "\\text{A2} \\land (\\text{condition}) \\Rightarrow \\text{A3}",
     )
@@ -161,11 +164,13 @@ describe("obligations", () => {
 })
 
 describe("chart", () => {
-  const source = chart(parse(SKETCH))
+  const source = chart(build("X", SKETCH))
 
-  it("draws the algorithm and its assertions in subgraphs of their own", () => {
-    expect(source).toContain('subgraph algorithm["Algorithm X"]')
-    expect(source).toContain('subgraph assertions["Assertions"]')
+  it("sets the subgraphs side by side, each reading downwards", () => {
+    expect(source.split("\n")[0]).toBe("flowchart LR")
+    expect(source).toContain('subgraph algorithm["Algorithm X"]\n    direction TB')
+    expect(source).toContain('subgraph assertions["Assertions"]\n    direction TB')
+    expect(source).toContain("algorithm ~~~ assertions")
   })
 
   it("draws Start and End as triangles, steps as boxes and assertions bare", () => {
@@ -175,17 +180,32 @@ describe("chart", () => {
     expect(source).toContain("A1@{ shape: text, label: 'A1. Initial assertion' }")
   })
 
-  it("dots a step to its postconditions and dashes a precondition to its step", () => {
-    /* Five control-flow links come first, so the assertions' links are 5–14. */
-    expect(source).toContain("X1 -.-> A2")
-    expect(source).toContain("A2 --> X2")
-    expect(source).toContain("linkStyle 5,7,9,11,13 stroke-dasharray:1 5")
-    expect(source).toContain("linkStyle 6,8,10,12,14 stroke-dasharray:8 5")
+  /* A node linked out of its subgraph makes Mermaid drop the subgraph's
+     direction, so the lines between the two are left to be drawn over it. */
+  it("links nothing across the subgraphs", () => {
+    expect(source).not.toMatch(/X\d+ -\.?-?> A\d+|A\d+ -\.?-?> X\d+/)
   })
 
   it("doubles the reader's dollars and draws < with a command", () => {
-    expect(chart(parse("A1 [Start => X1]: $0 < r$\nX1. Terminate."))).toContain(
+    expect(chart(build("X", [assertion("start", 1, "$0 < r$"), step("Terminate.")]))).toContain(
       "label: 'A1. $$0 \\lt  r$$'",
     )
+  })
+})
+
+describe("links", () => {
+  it("dots a step to its postconditions and dashes a precondition to its step", () => {
+    expect(links(build("X", SKETCH)).slice(0, 4)).toEqual([
+      { from: "Start", to: "A1", style: "dotted" },
+      { from: "A1", to: "X1", style: "dashed" },
+      { from: "X1", to: "A2", style: "dotted" },
+      { from: "A2", to: "X2", style: "dashed" },
+    ])
+  })
+
+  it("leaves out an end that names no step", () => {
+    expect(links(build("X", [step("Terminate."), assertion(1, 4)]))).toEqual([
+      { from: "X1", to: "A1", style: "dotted" },
+    ])
   })
 })

@@ -29,9 +29,14 @@
     onnodehover?: (node: { id: string; element: Element } | null) => void
     /** Called with a node's id and element when it is clicked or tapped. */
     onnodeclick?: (node: { id: string; element: Element }) => void
+    /**
+     * Called with the drawn diagram each time it is drawn, for a diagram that
+     * adds marks of its own on top of Mermaid's.
+     */
+    onrender?: (svg: SVGSVGElement) => void
   }
 
-  let { chart, children, algorithm, lit = [], onnodehover, onnodeclick }: Props = $props()
+  let { chart, children, algorithm, lit = [], onnodehover, onnodeclick, onrender }: Props = $props()
 
   let figure: HTMLElement | undefined = $state()
 
@@ -150,6 +155,12 @@
     })
 
     return () => listening.forEach((stop) => stop())
+  })
+
+  $effect(() => {
+    if (!svg || !onrender) return
+    const drawn = figure?.querySelector("svg")
+    if (drawn) onrender(drawn)
   })
 
   /* One pass for both sources of light, so neither clears what the other set. */

@@ -1,18 +1,191 @@
 <script lang="ts">
   import Mermaid from "./Mermaid.svelte"
   import Tex from "./Tex.svelte"
-  import { chart, obligationTex, obligations, parse } from "$lib/assertions/flow"
+  import {
+    DEFAULT_LETTER,
+    END,
+    START,
+    build,
+    chart,
+    endpointId,
+    letterError,
+    links,
+    obligationTex,
+    obligations,
+    type Endpoint,
+    type Row,
+  } from "$lib/assertions/flow"
 
-  let { initial = "" }: { initial?: string } = $props()
+  type Props = {
+    /** The algorithm's letter, X unless the page asks for another. */
+    letter?: string
+    /** Its steps and assertions, interlaced in the order they are read. */
+    rows?: Row[]
+  }
+
+  let { letter: initialLetter = DEFAULT_LETTER, rows: initialRows = [] }: Props = $props()
 
   /* Like the formula tool's opening lines, the opening algorithm is content the
      reader then edits, so it is read once. */
   // svelte-ignore state_referenced_locally
-  let source = $state(initial)
+  let letter = $state(initialLetter)
+  // svelte-ignore state_referenced_locally
+  let rows = $state(initialRows.map((row, id) => ({ id, ...row })))
+  let nextId = rows.length
 
-  const flow = $derived(parse(source))
+  const flow = $derived(build(letter, rows))
   const diagram = $derived(chart(flow))
   const stepIds = $derived(new Set(flow.steps.map((step) => step.id)))
+
+  /** Each row's label, X1 or A1, counted from the top. */
+  const labels = $derived.by(() => {
+    let steps = 0
+    let assertions = 0
+    return rows.map((row) =>
+      row.kind === "step" ? `${flow.letter}${++steps}` : `A${++assertions}`,
+    )
+  })
+
+  /**
+   * A new letter renames the steps, so "go back to X1" in a step's text is
+   * renamed with them; anything else the reader wrote is left alone.
+   */
+  function setLetter(value: string) {
+    const before = flow.letter
+    letter = value
+    if (letterError(value)) return
+    const after = value.trim().toUpperCase()
+    if (after === before) return
+    const named = new RegExp(`\\b${before}(\\d+)\\b`, "g")
+    for (const row of rows)
+      if (row.kind === "step") row.text = row.text.replace(named, `${after}$1`)
+  }
+
+  function addStep() {
+    rows.push({ id: nextId++, kind: "step", text: "" })
+  }
+
+  /* A new assertion most often follows the step just written, and nothing after
+     it exists yet, so it opens on that step's arrow out to End. */
+  function addAssertion() {
+    const steps = flow.steps.length
+    rows.push({
+      id: nextId++,
+      kind: "assertion",
+      from: steps ? steps : "start",
+      to: "end",
+      text: "",
+    })
+  }
+
+  /* Removing a step renumbers the steps after it. What the reader wrote, and the
+     ends of their assertions, are left as they were rather than being rewritten
+     underneath them, as the rule table in 1.1 treats its stage numbers. */
+  function removeRow(index: number) {
+    rows.splice(index, 1)
+  }
+
+  /** Every place an arrow can leave from, or enter, as a select offers them. */
+  function endpoints(end: "from" | "to", current: Endpoint): Endpoint[] {
+    const numbers = flow.steps.map((_, i) => i + 1)
+    /* A step that has since been removed stays selectable, so the select shows
+       what the assertion actually names while the error says why it is wrong. */
+    if (typeof current === "number" && !numbers.includes(current)) numbers.push(current)
+    return end === "from" ? ["start", ...numbers] : [...numbers, "end"]
+  }
+
+  function parseEndpoint(value: string): Endpoint {
+    return value === "start" || value === "end" ? value : Number(value)
+  }
+
+  const SVG = "http://www.w3.org/2000/svg"
+
+  /* Each diagram on a page needs its own marker ids, or every arrowhead would
+     point at the first diagram's. */
+  const markerPrefix = `assertion-arrow-${Math.random().toString(36).slice(2, 8)}`
+
+  /**
+   * Draw the lines between steps and assertions over Mermaid's layout. Each
+   * runs from the right of whatever is on the algorithm's side to the left of
+   * the assertion, or back; the assertion's postcondition line meets it above
+   * its middle and its precondition line below, so the two do not merge.
+   */
+  function drawLinks(svg: SVGSVGElement) {
+    svg.querySelector("g.assertion-links")?.remove()
+    const toSvg = svg.getScreenCTM()?.inverse()
+    if (!toSvg) return
+
+    const nodes: Record<string, Element> = {}
+    for (const node of svg.querySelectorAll("g.node")) {
+      const id = node.id.match(/-flowchart-(.+)-\d+$/)?.[1]
+      if (id) nodes[id] = node
+    }
+
+    const box = (element: Element) => {
+      const r = element.getBoundingClientRect()
+      const corner = (x: number, y: number) => new DOMPoint(x, y).matrixTransform(toSvg)
+      const a = corner(r.left, r.top)
+      const b = corner(r.right, r.bottom)
+      return { left: a.x, right: b.x, top: a.y, bottom: b.y }
+    }
+
+    const group = document.createElementNS(SVG, "g")
+    group.classList.add("assertion-links")
+    const defs = document.createElementNS(SVG, "defs")
+    const marker = document.createElementNS(SVG, "marker")
+    marker.id = markerPrefix
+    for (const [name, value] of Object.entries({
+      viewBox: "0 0 10 10",
+      refX: "9",
+      refY: "5",
+      markerWidth: "7",
+      markerHeight: "7",
+      orient: "auto-start-reverse",
+    }))
+      marker.setAttribute(name, value)
+    const head = document.createElementNS(SVG, "path")
+    head.setAttribute("d", "M 0 0 L 10 5 L 0 10 z")
+    marker.append(head)
+    defs.append(marker)
+    group.append(defs)
+
+    for (const link of links(flow)) {
+      const fromNode = nodes[link.from]
+      const toNode = nodes[link.to]
+      if (!fromNode || !toNode) continue
+      const toAssertion = link.style === "dotted"
+      const step = box(toAssertion ? fromNode : toNode)
+      const assertion = box(toAssertion ? toNode : fromNode)
+
+      /* Start and End are triangles, whose sides at mid-height are a quarter
+         of their width in from the corners of the box around them. */
+      const stepId = toAssertion ? link.from : link.to
+      const inset = stepId === START || stepId === END ? (step.right - step.left) / 4 : 0
+      const stepPoint = { x: step.right - inset, y: (step.top + step.bottom) / 2 }
+      const height = assertion.bottom - assertion.top
+      const assertionPoint = {
+        x: assertion.left,
+        y: assertion.top + height * (toAssertion ? 1 / 3 : 2 / 3),
+      }
+      const [start, end] = toAssertion ? [stepPoint, assertionPoint] : [assertionPoint, stepPoint]
+      const bend = Math.max(Math.abs(end.x - start.x) / 2, 24)
+      const outward = toAssertion ? 1 : -1
+
+      const path = document.createElementNS(SVG, "path")
+      path.setAttribute(
+        "d",
+        `M ${start.x} ${start.y} C ${start.x + outward * bend} ${start.y}, ` +
+          `${end.x - outward * bend} ${end.y}, ${end.x} ${end.y}`,
+      )
+      path.classList.add(link.style)
+      path.dataset.from = link.from
+      path.dataset.to = link.to
+      path.setAttribute("marker-end", `url(#${markerPrefix})`)
+      group.append(path)
+    }
+
+    svg.append(group)
+  }
 
   let wrapper: HTMLElement | undefined = $state()
 
@@ -55,26 +228,77 @@
       side: right ? "right" : "left",
     }
   }
-
-  function grow(node: HTMLTextAreaElement) {
-    node.style.height = "auto"
-    const style = getComputedStyle(node)
-    const border = parseFloat(style.borderTopWidth) + parseFloat(style.borderBottomWidth)
-    node.style.height = `${node.scrollHeight + border}px`
-  }
 </script>
 
 <div class="tool">
-  <textarea
-    class="source mono"
-    spellcheck="false"
-    autocapitalize="off"
-    autocomplete="off"
-    aria-label="Algorithm"
-    rows={source.split("\n").length}
-    oninput={(event) => grow(event.currentTarget)}
-    {@attach grow}
-    bind:value={source}></textarea>
+  <p class="letter">
+    <label>
+      Algorithm
+      <input
+        class="mono"
+        type="text"
+        maxlength="1"
+        autocapitalize="characters"
+        autocomplete="off"
+        spellcheck="false"
+        aria-label="Letter"
+        value={letter}
+        oninput={(event) => setLetter(event.currentTarget.value)}
+      />
+    </label>
+  </p>
+
+  <ol class="rows">
+    {#each rows as row, index (row.id)}
+      {@const name = labels[index]}
+      <li class:assertion={row.kind === "assertion"}>
+        <span class="name mono">{row.kind === "step" ? `${name}.` : name}</span>
+        {#if row.kind === "assertion"}
+          <span class="arrow">
+            [<select
+              aria-label="{name} from"
+              value={String(row.from)}
+              onchange={(event) => (row.from = parseEndpoint(event.currentTarget.value))}
+            >
+              {#each endpoints("from", row.from) as point (point)}
+                <option value={String(point)}>{endpointId(flow.letter, point)}</option>
+              {/each}
+            </select>
+            &rArr;
+            <select
+              aria-label="{name} to"
+              value={String(row.to)}
+              onchange={(event) => (row.to = parseEndpoint(event.currentTarget.value))}
+            >
+              {#each endpoints("to", row.to) as point (point)}
+                <option value={String(point)}>{endpointId(flow.letter, point)}</option>
+              {/each}
+            </select>]
+          </span>
+        {/if}
+        <input
+          class="text mono"
+          type="text"
+          spellcheck="false"
+          autocapitalize="off"
+          autocomplete="off"
+          aria-label={name}
+          bind:value={row.text}
+        />
+        <button
+          type="button"
+          class="tool-button"
+          aria-label="Remove {name}"
+          onclick={() => removeRow(index)}>&times;</button
+        >
+      </li>
+    {/each}
+  </ol>
+
+  <p class="controls">
+    <button type="button" class="tool-button" onclick={addStep}>Add step</button>
+    <button type="button" class="tool-button" onclick={addAssertion}>Add assertion</button>
+  </p>
 
   {#if flow.errors.length}
     <ul class="errors">
@@ -88,6 +312,7 @@
     <Mermaid
       chart={diagram}
       {lit}
+      onrender={drawLinks}
       onnodehover={(node) => (hovered = node && place(node.id, node.element))}
       onnodeclick={(node) => {
         const next = place(node.id, node.element)
@@ -117,12 +342,88 @@
     margin: 0 0 1.4em;
   }
 
-  .source {
-    display: block;
-    width: 100%;
-    max-width: 72ch;
-    resize: none;
-    overflow: hidden;
+  .letter label {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-weight: 600;
+  }
+
+  .letter input {
+    width: 2.5em;
+    text-align: center;
+    text-transform: uppercase;
+  }
+
+  .rows {
+    list-style: none;
+    margin: 0 0 0.6em;
+    padding: 0;
+    max-width: none;
+  }
+
+  /* One line a row: the label in a fixed column so the inputs line up, the
+     arrow an assertion sits on, then what it says. */
+  .rows li {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.4rem;
+    margin-bottom: 0.4em;
+  }
+
+  /* Indented, so the steps read as the algorithm and the assertions as what is
+     said between them. */
+  .rows li.assertion {
+    padding-left: 1.5rem;
+  }
+
+  .name {
+    flex: 0 0 2.6em;
+    font-weight: 600;
+  }
+
+  .arrow {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.25rem;
+    white-space: nowrap;
+  }
+
+  .arrow select {
+    width: auto;
+    padding: 2px 1.8rem 2px 6px;
+    font-size: 0.9rem;
+  }
+
+  .text {
+    flex: 1 1 16rem;
+    min-width: 0;
+  }
+
+  .controls {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.6rem;
+  }
+
+  .tool-button {
+    background: var(--surface);
+    color: var(--ink);
+    border: 1px solid var(--line);
+    border-radius: 6px;
+    padding: 4px 10px;
+    font: inherit;
+    font-size: 0.9rem;
+    cursor: pointer;
+  }
+  .tool-button:hover {
+    border-color: var(--accent);
+    color: var(--accent);
+  }
+  .tool-button:focus-visible {
+    outline: 2px solid var(--accent);
+    outline-offset: 1px;
   }
 
   .errors {
@@ -138,6 +439,26 @@
 
   .diagram :global(g.node) {
     cursor: pointer;
+  }
+
+  /* Drawn in the diagram's own line colour, under the same rules as its edges:
+     dotted out of a step to what it guarantees, dashed into a step from what
+     it needs. */
+  .diagram :global(g.assertion-links path) {
+    fill: none;
+    stroke: var(--ink-soft);
+    stroke-width: 1.5px;
+  }
+  .diagram :global(g.assertion-links marker path) {
+    fill: var(--ink-soft);
+    stroke: none;
+  }
+  .diagram :global(g.assertion-links path.dotted) {
+    stroke-dasharray: 1 5;
+    stroke-linecap: round;
+  }
+  .diagram :global(g.assertion-links path.dashed) {
+    stroke-dasharray: 8 5;
   }
 
   .obligations {

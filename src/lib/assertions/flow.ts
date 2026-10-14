@@ -1,29 +1,29 @@
 /**
- * An algorithm written the way 1.1 lays one out, with Floyd's assertions
- * interlaced between its steps:
- *
- *     Algorithm X
- *     A1 [Start => X1]: Initial assertion
- *     X1. [Title.] Something.
- *     A2 [X1 => X2]: Something
- *     X2. If condition, terminate.
- *     A3 [X2 => End]: Final assertion
+ * An algorithm laid out the way 1.1 lays one out, with Floyd's assertions
+ * interlaced between its steps. Each row is a step or an assertion; steps are
+ * numbered X1, X2, … and assertions A1, A2, … in the order they are written,
+ * and an assertion names the arrow it sits on by the step numbers at its ends.
  *
  * The flow between steps is read from the steps themselves, the way a reader
  * reads Knuth: a step goes on to the next one unless it says otherwise, "go to
  * X1" sends it elsewhere, "terminate" ends the algorithm, and "If condition,
- * ..." makes the step a branch whose other arm carries on as usual. Each
- * assertion names the arrow it sits on.
+ * ..." makes the step a branch whose other arm carries on as usual.
  */
 
 export const START = "Start"
 export const END = "End"
 
-/** The letter an algorithm is given when its source does not name one. */
+/** The letter an algorithm is given until the reader picks another. */
 export const DEFAULT_LETTER = "X"
 
 /** Assertions are A1, A2, …, so an algorithm cannot also be lettered A. */
 const ASSERTION_LETTER = "A"
+
+/** Where an assertion's arrow starts or ends: Start, End, or a step's number. */
+export type Endpoint = "start" | "end" | number
+
+export type Row =
+  { kind: "step"; text: string } | { kind: "assertion"; from: Endpoint; to: Endpoint; text: string }
 
 export type Step = {
   /** `X1`, `X2`: the letter followed by the number. */
@@ -64,86 +64,42 @@ export type Obligation = {
   post: string | null
 }
 
-const HEADER = /^Algorithm\s+([A-Za-z])\b/
-const STEP = /^([A-Za-z])(\d+)\s*[.:]\s*(.*)$/
-const ASSERTION = /^A(\d+)\s*\[\s*([^\]]*?)\s*(?:=>|⇒|->|→)\s*([^\]]*?)\s*\]\s*[.:]?\s*(.*)$/
+/**
+ * The letter as typed, if it can letter an algorithm: one letter, and not the
+ * one the assertions already use.
+ */
+export function letterError(letter: string): string | null {
+  const typed = letter.trim().toUpperCase()
+  if (!/^[A-Z]$/.test(typed)) return "The algorithm's letter must be a single letter."
+  if (typed === ASSERTION_LETTER) return "Algorithm A would share its labels with the assertions."
+  return null
+}
 
-type Entry =
-  | { kind: "step"; id: string; letter: string; text: string[] }
-  | { kind: "assertion"; id: string; from: string; to: string; text: string[] }
+/** `X3` for step 3 of Algorithm X; Start and End by name. */
+export function endpointId(letter: string, point: Endpoint): string {
+  if (point === "start") return START
+  if (point === "end") return END
+  return `${letter}${point}`
+}
 
-export function parse(source: string): Flow {
+export function build(letter: string, rows: Row[]): Flow {
   const errors: string[] = []
-  const entries: Entry[] = []
-  let letter: string | null = null
-
-  for (const [index, raw] of source.split("\n").entries()) {
-    const line = raw.trim()
-    if (!line) continue
-
-    const header: RegExpMatchArray | null =
-      !letter && entries.length === 0 ? line.match(HEADER) : null
-    if (header) {
-      letter = header[1].toUpperCase()
-      continue
-    }
-
-    const assertion = line.match(ASSERTION)
-    if (assertion) {
-      entries.push({
-        kind: "assertion",
-        id: `A${assertion[1]}`,
-        from: endpoint(assertion[2]),
-        to: endpoint(assertion[3]),
-        text: [assertion[4]],
-      })
-      continue
-    }
-
-    const step = line.match(STEP)
-    if (step && step[1].toUpperCase() === ASSERTION_LETTER) {
-      errors.push(`A${step[2]} needs the arrow it sits on, as in [X1 => X2].`)
-      continue
-    }
-    if (step) {
-      const stepLetter = step[1].toUpperCase()
-      entries.push({
-        kind: "step",
-        id: `${stepLetter}${step[2]}`,
-        letter: stepLetter,
-        text: [step[3]],
-      })
-      continue
-    }
-
-    /* A long step or assertion runs on over as many lines as it likes. */
-    const last = entries[entries.length - 1]
-    if (last) last.text.push(line)
-    else errors.push(`Line ${index + 1} is neither a step nor an assertion.`)
-  }
-
-  const name = letter ?? DEFAULT_LETTER
-  if (name === ASSERTION_LETTER)
-    errors.push("Algorithm A would share its labels with the assertions.")
+  const invalid = letterError(letter)
+  if (invalid) errors.push(invalid)
+  const name = invalid ? DEFAULT_LETTER : letter.trim().toUpperCase()
 
   const steps: Step[] = []
   const assertions: Assertion[] = []
-  const seen = new Set<string>()
-
-  for (const entry of entries) {
-    if (seen.has(entry.id)) {
-      errors.push(`${entry.id} is written twice.`)
-      continue
-    }
-    seen.add(entry.id)
-
-    const text = entry.text.join(" ").trim()
-    if (entry.kind === "assertion") {
-      assertions.push({ id: entry.id, from: entry.from, to: entry.to, text })
-    } else if (entry.letter !== name) {
-      errors.push(`${entry.id} is not a step of Algorithm ${name}.`)
+  for (const row of rows) {
+    if (row.kind === "step") {
+      steps.push({ id: `${name}${steps.length + 1}`, ...titled(row.text.trim()) })
     } else {
-      steps.push({ id: entry.id, ...titled(text) })
+      assertions.push({
+        id: `A${assertions.length + 1}`,
+        from: endpointId(name, row.from),
+        to: endpointId(name, row.to),
+        text: row.text.trim(),
+      })
     }
   }
 
@@ -166,14 +122,6 @@ export function parse(source: string): Flow {
   }
 
   return { letter: name, steps, assertions, edges, errors }
-}
-
-/** `Start` and `End` in whatever case they were typed; steps upper-cased. */
-function endpoint(text: string): string {
-  const lower = text.toLowerCase()
-  if (lower === "start") return START
-  if (lower === "end") return END
-  return text.toUpperCase()
 }
 
 /** Knuth names a step in brackets before saying what it does: `[Divide.] …`. */
@@ -339,64 +287,64 @@ function escapeText(text: string): string {
 
 /**
  * The flowchart: the algorithm's steps in one subgraph and its assertions in
- * another, each step joined to its postconditions by a dotted line and each
- * precondition to its step by a dashed one.
+ * another, side by side and each reading downwards.
+ *
+ * Mermaid ignores a subgraph's direction once any of its nodes links outside
+ * it, so the lines between steps and assertions are not part of the chart;
+ * `links` lists them for drawing over it once Mermaid has laid it out.
  */
 export function chart(flow: Flow): string {
-  const lines = ["flowchart TB"]
-  const steps = new Set(flow.steps.map((step) => step.id))
+  const lines = ["flowchart LR"]
 
   lines.push(`  subgraph algorithm["Algorithm ${flow.letter}"]`)
+  lines.push("    direction TB")
   lines.push(`    ${START}@{ shape: flip-tri, label: "${START}" }`)
   for (const step of flow.steps)
     lines.push(`    ${step.id}["${label(`${step.id}. ${step.title ?? step.body}`)}"]`)
   lines.push(`    ${END}@{ shape: tri, label: "${END}" }`)
+  for (const edge of flow.edges) {
+    const text = edge.condition ? ` -- "${label(`$${conditionTex(edge.condition)}$`)}" -->` : " -->"
+    lines.push(`    ${edge.from}${text} ${edge.to}`)
+  }
   lines.push("  end")
 
   if (flow.assertions.length) {
     lines.push(`  subgraph assertions["Assertions"]`)
+    lines.push("    direction TB")
     for (const assertion of flow.assertions) {
       lines.push(
         `    ${assertion.id}@{ shape: text, label: ${shapeLabel(`${assertion.id}. ${assertion.text}`)} }`,
       )
     }
+    /* Unlinked, the assertions would share one rank and sit in a row; chained
+       invisibly they stand in a column, in the order they were written. */
+    if (flow.assertions.length > 1)
+      lines.push(`    ${flow.assertions.map((a) => a.id).join(" ~~~ ")}`)
     lines.push("  end")
+    /* A link between the subgraphs themselves, which Mermaid allows without
+       giving up their directions, puts the assertions beside the algorithm. */
+    lines.push("  algorithm ~~~ assertions")
   }
-
-  /* linkStyle addresses links by the order they are written, so count them. */
-  let links = 0
-  const dotted: number[] = []
-  const dashed: number[] = []
-
-  for (const edge of flow.edges) {
-    const text = edge.condition ? ` -- "${label(`$${conditionTex(edge.condition)}$`)}" -->` : " -->"
-    lines.push(`  ${edge.from}${text} ${edge.to}`)
-    links++
-  }
-
-  const known = (point: string) => point === START || point === END || steps.has(point)
-  for (const assertion of flow.assertions) {
-    if (known(assertion.from) && assertion.from !== END) {
-      lines.push(`  ${assertion.from} -.-> ${assertion.id}`)
-      dotted.push(links++)
-    }
-    if (known(assertion.to) && assertion.to !== START) {
-      lines.push(`  ${assertion.id} --> ${assertion.to}`)
-      dashed.push(links++)
-    }
-  }
-
-  /* Unlinked, the assertions would sit side by side on one rank as wide as all
-     of them together; chained invisibly they stand in a column, in the order
-     they were written, beside the algorithm. Written last, so the links that
-     linkStyle counts keep their numbers. */
-  if (flow.assertions.length > 1) lines.push(`  ${flow.assertions.map((a) => a.id).join(" ~~~ ")}`)
-
-  if (dotted.length)
-    lines.push(`  linkStyle ${dotted.join(",")} stroke-dasharray:1 5,stroke-linecap:round`)
-  if (dashed.length) lines.push(`  linkStyle ${dashed.join(",")} stroke-dasharray:8 5`)
 
   return lines.join("\n")
+}
+
+/**
+ * The lines Mermaid is not asked to draw: dotted from a step to each of its
+ * postconditions, dashed from each precondition to its step.
+ */
+export type Link = { from: string; to: string; style: "dotted" | "dashed" }
+
+export function links(flow: Flow): Link[] {
+  const known = new Set([START, END, ...flow.steps.map((step) => step.id)])
+  return flow.assertions.flatMap((assertion) => {
+    const drawn: Link[] = []
+    if (known.has(assertion.from) && assertion.from !== END)
+      drawn.push({ from: assertion.from, to: assertion.id, style: "dotted" })
+    if (known.has(assertion.to) && assertion.to !== START)
+      drawn.push({ from: assertion.id, to: assertion.to, style: "dashed" })
+    return drawn
+  })
 }
 
 /**

@@ -1,63 +1,63 @@
 <script lang="ts">
- import FormulaTable from "$lib/components/FormulaTable.svelte"
- import Tex from "$lib/components/Tex.svelte"
- import { NAMES } from "$lib/formulas/names"
- import { trace, type Step } from "$lib/algorithms/extended-euclid/trace"
- import faithfulSource from "$lib/algorithms/extended-euclid/faithful.ts?raw"
- import idiomaticSource from "$lib/algorithms/extended-euclid/idiomatic.ts?raw"
-    import CodeTabs from "$lib/components/CodeTabs.svelte"
- import AssertionDiagram from "$lib/components/AssertionDiagram.svelte"
+  import FormulaTable from "$lib/components/FormulaTable.svelte"
+  import Tex from "$lib/components/Tex.svelte"
+  import { NAMES } from "$lib/formulas/names"
+  import { trace, type Step } from "$lib/algorithms/extended-euclid/trace"
+  import faithfulSource from "$lib/algorithms/extended-euclid/faithful.ts?raw"
+  import idiomaticSource from "$lib/algorithms/extended-euclid/idiomatic.ts?raw"
+  import CodeTabs from "$lib/components/CodeTabs.svelte"
+  import AssertionDiagram from "$lib/components/AssertionDiagram.svelte"
+  import type { Row } from "$lib/assertions/flow"
 
- let m: number | null = $state(1769)
- let n: number | null = $state(551)
+  let m: number | null = $state(1769)
+  let n: number | null = $state(551)
 
- const steps = $derived(isPositiveInteger(m) && isPositiveInteger(n) ? trace(m, n) : null)
- const answer = $derived(steps ? steps[steps.length - 1] : null)
+  const steps = $derived(isPositiveInteger(m) && isPositiveInteger(n) ? trace(m, n) : null)
+  const answer = $derived(steps ? steps[steps.length - 1] : null)
 
- function isPositiveInteger(value: number | null): value is number {
-   return value !== null && Number.isInteger(value) && value > 0
- }
+  function isPositiveInteger(value: number | null): value is number {
+    return value !== null && Number.isInteger(value) && value > 0
+  }
 
- /* Written over four lines rather than one: a case analysis is the formula a
+  /* Written over four lines rather than one: a case analysis is the formula a
     reader is most likely to want broken up, so the tool opens showing that it
     can be. */
- const recurrence = [
-   "\\begin{cases}",
-   "  0 & x = 0 \\\\",
-   "  2\\self(x-1) + 1 & x > 0",
-   "\\end{cases}",
- ].join("\n")
+  const recurrence = [
+    "\\begin{cases}",
+    "  0 & x = 0 \\\\",
+    "  2\\self(x-1) + 1 & x > 0",
+    "\\end{cases}",
+  ].join("\n")
 
- /* A recurrence, a closed form to test against it, and the summation they both
+  /* A recurrence, a closed form to test against it, and the summation they both
     come from — the shape of every induction argument in the section, so the
     tool opens on one rather than on an empty field.
 
     A line is named by its position, so `\self` stands in for the name a line
     will turn out to have: a recurrence that wrote its own name in by hand
     would come to call whichever line later took that position. */
- const openingFormulas = ["x^2", "2x - 1", "\\sum_{k=1}^{x} g(k)", recurrence].map((tex, index) =>
-   tex.replaceAll("\\self", NAMES[index]),
- )
+  const openingFormulas = ["x^2", "2x - 1", "\\sum_{k=1}^{x} g(k)", recurrence].map((tex, index) =>
+    tex.replaceAll("\\self", NAMES[index]),
+  )
 
- /* The author's own sketch of the input: steps laid out as in 1.1, with each
+  /* The author's own sketch of the input: steps laid out as in 1.1, with each
     assertion written just after the step it leaves. */
- const openingAlgorithm = [
-   "Algorithm X",
-   "A1 [Start => X1]: Initial assertion",
-   "X1: something",
-   "A2 [X1 => X2]: something",
-   "X2: If condition, terminate",
-   "A3 [X2 => End]: Final assertion",
-   "A4 [X2 => X3]: something",
-   "X3: Go back to X1",
-   "A5 [X3 => X1]: something",
- ].join("\n")
+  const openingAlgorithm: Row[] = [
+    { kind: "assertion", from: "start", to: 1, text: "Initial assertion" },
+    { kind: "step", text: "something" },
+    { kind: "assertion", from: 1, to: 2, text: "something" },
+    { kind: "step", text: "If condition, terminate" },
+    { kind: "assertion", from: 2, to: "end", text: "Final assertion" },
+    { kind: "assertion", from: 2, to: 3, text: "something" },
+    { kind: "step", text: "Go back to X1" },
+    { kind: "assertion", from: 3, to: 1, text: "something" },
+  ]
 
- /** `a \cdot m + b \cdot n = d`, a negative coefficient written as a subtraction. */
- function bezout(step: Step, m: number, n: number): string {
-   const second = step.b < 0 ? `- ${-step.b} \\cdot ${n}` : `+ ${step.b} \\cdot ${n}`
-   return `${step.a} \\cdot ${m} ${second} = ${step.d}`
- }
+  /** `a \cdot m + b \cdot n = d`, a negative coefficient written as a subtraction. */
+  function bezout(step: Step, m: number, n: number): string {
+    const second = step.b < 0 ? `- ${-step.b} \\cdot ${n}` : `+ ${step.b} \\cdot ${n}`
+    return `${step.a} \\cdot ${m} ${second} = ${step.d}`
+  }
 </script>
 
 <h2 id="closed-forms">Closed Forms</h2>
@@ -73,8 +73,8 @@
 <h2 id="extended-euclids-algorithm">Extended Euclid's Algorithm</h2>
 
 <p>
-  Knuth provides an extended form of Euclid's Algorithm to illustrate the concepts in this
-  section. Here is a table to explore how different values behave going through that algorithm.
+  Knuth provides an extended form of Euclid's Algorithm to illustrate the concepts in this section.
+  Here is a table to explore how different values behave going through that algorithm.
 </p>
 
 <div class="inputs">
@@ -143,10 +143,14 @@
 <h2 id="diagramming">Creating Diagrams</h2>
 
 <p>
-  To help you explore Assertions within diagrams more extensively, here is a tool to assist you in creating them and labelling assertions. Connect to other steps by mentioning their label (e.g. X1, X2, etc.). To branch, state "If condition, whatever." The word "terminate" signals the end of the algorithm. If you hover over or click a step in the diagram, it will show what's needed to prove that step. 
+  To help you explore Assertions within diagrams more extensively, here is a tool to assist you in
+  creating them and labelling assertions. Connect to other steps by mentioning their label (e.g. X1,
+  X2, etc.). To branch, state "If condition, whatever." The word "terminate" signals the end of the
+  algorithm. If you hover over or click a step in the diagram, it will show what's needed to prove
+  that step.
 </p>
 
-<AssertionDiagram initial={openingAlgorithm} />
+<AssertionDiagram rows={openingAlgorithm} />
 
 <style>
   .inputs {

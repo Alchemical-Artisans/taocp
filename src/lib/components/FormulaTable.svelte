@@ -170,7 +170,7 @@
           <tr>
             <th scope="col">$x$</th>
             {#each columns as column (column.name)}
-              <th scope="col"><Tex tex={signature(column.name)} /></th>
+              <th scope="col"><Tex tex="{signature(column.name)} = {column.tex}" /></th>
             {/each}
           </tr>
         </thead>
@@ -290,8 +290,14 @@
     color: var(--ink-faint);
   }
 
+  /* A value and its decimal read as one entry, so they stay on one line and the
+     column widens to fit rather than the decimal dropping underneath. */
+  .values td {
+    white-space: nowrap;
+  }
+
   .approx {
-    display: block;
+    margin-left: 0.5em;
     color: var(--ink-faint);
     font-size: 0.78rem;
   }

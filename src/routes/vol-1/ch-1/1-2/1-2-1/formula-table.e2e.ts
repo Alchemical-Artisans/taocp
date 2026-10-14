@@ -8,7 +8,7 @@ const PAGE = "/vol-1/ch-1/1-2/1-2-1"
 /**
  * The exact values of one row, the leading `x` included. Each is typeset, so
  * the TeX that KaTeX keeps beside its output is read rather than the glyphs,
- * which also leaves the decimal approximation under a cell out of it.
+ * which also leaves the decimal approximation beside a cell out of it.
  */
 function row(page: Page, index: number) {
   return page.locator("table.values tbody tr").nth(index).locator(".katex-mathml annotation")
@@ -27,6 +27,9 @@ function formula(page: Page, name: string) {
  */
 async function enter(page: Page, bodies: Record<string, string>) {
   await page.goto(PAGE)
+  const removers = page.getByRole("button", { name: /^Remove / })
+  await expect(removers.first()).toBeVisible()
+  while ((await removers.count()) > 3) await removers.last().click()
   for (const name of ["f", "g", "h"]) {
     await formula(page, name).fill(bodies[name] ?? "")
   }
@@ -49,13 +52,14 @@ test("labels each line with the name the other lines call it by", async ({ page 
   await enter(page, { f: "x", g: "x^2", h: "x^3" })
 
   await expect(row(page, 2)).toHaveText(["3", "3", "9", "27"])
-  /* The names head the columns too, since that is the reader's handle on them.
-     Read from the annotation, as the rows are: KaTeX writes the same text into
-     its HTML, its MathML and the annotation, so the heading reads triple. */
+  /* The columns are headed by the whole equation, name included, so a column
+     reads without looking back up at the boxes. Read from the annotation, as
+     the rows are: KaTeX writes the same text into its HTML, its MathML and the
+     annotation, so the heading reads triple. */
   await expect(page.locator("table.values thead th .katex-mathml annotation")).toHaveText([
-    "f(x)",
-    "g(x)",
-    "h(x)",
+    "f(x) = x",
+    "g(x) = x^2",
+    "h(x) = x^3",
   ])
 })
 
@@ -83,7 +87,7 @@ test("tabulates a summation", async ({ page }) => {
   await expect(row(page, 9)).toHaveText(["10", "55"])
 })
 
-test("keeps a value exact and shows its decimal underneath", async ({ page }) => {
+test("keeps a value exact and shows its decimal beside it", async ({ page }) => {
   await enter(page, { f: "\\sum_{k=1}^{x} 1/k" })
 
   await expect(row(page, 3)).toHaveText(["4", "\\frac{25}{12}"])

@@ -9,20 +9,19 @@ export function extended_euclids_algorithm(m: number, n: number) {
 
   while (true) {
     // E2
-    const q = Math.floor(c / d)
-    const r = c % d
+    let q = Math.floor(c / d)
+    let r = c % d
 
-    // E3
-    if (r == 0) return { a, b, d }
+    if (r == 0) return { remainder: d, a, b } // E3
 
     // E4
     c = d
     d = r
     let t = a_prime
     a_prime = a
-    a = t - q * a
+    a = t - q*a
     t = b_prime
     b_prime = b
-    b = t - q * b
+    b = t - q*b
   }
 }

@@ -14,13 +14,13 @@ describe.each(Object.entries(implementations))("%s", (_name, extended_euclids_al
     [12, 12, 0, 1, 12],
     [7, 21, 1, 0, 7],
   ])("gives a, b, d for m=%i, n=%i", (m, n, a, b, d) => {
-    expect(extended_euclids_algorithm(m, n)).toEqual({ a, b, d })
+    expect(extended_euclids_algorithm(m, n)).toEqual({ a, b, remainder: d })
   })
 
   it("satisfies am + bn = d", () => {
     for (let m = 1; m <= 60; m++) {
       for (let n = 1; n <= 60; n++) {
-        const { a, b, d } = extended_euclids_algorithm(m, n)
+        const { a, b, remainder: d } = extended_euclids_algorithm(m, n)
         expect([m, n, a * m + b * n]).toEqual([m, n, d])
       }
     }
@@ -29,7 +29,7 @@ describe.each(Object.entries(implementations))("%s", (_name, extended_euclids_al
   it("finds the greatest common divisor", () => {
     for (let m = 1; m <= 60; m++) {
       for (let n = 1; n <= 60; n++) {
-        expect(extended_euclids_algorithm(m, n).d).toBe(euclids_algorithm(m, n))
+        expect(extended_euclids_algorithm(m, n).remainder).toBe(euclids_algorithm(m, n))
       }
     }
   })
@@ -46,7 +46,7 @@ describe.each(Object.entries(implementations))("%s", (_name, extended_euclids_al
   it("keeps the coefficients small: |a| <= n/d and |b| <= m/d", () => {
     for (let m = 1; m <= 60; m++) {
       for (let n = 1; n <= 60; n++) {
-        const { a, b, d } = extended_euclids_algorithm(m, n)
+        const { a, b, remainder: d } = extended_euclids_algorithm(m, n)
         expect(Math.abs(a)).toBeLessThanOrEqual(n / d)
         expect(Math.abs(b)).toBeLessThanOrEqual(m / d)
       }
@@ -56,13 +56,13 @@ describe.each(Object.entries(implementations))("%s", (_name, extended_euclids_al
   it("gives a = 0 and b = 1 when n already divides m", () => {
     for (let n = 1; n <= 30; n++) {
       for (let k = 1; k <= 10; k++) {
-        expect(extended_euclids_algorithm(k * n, n)).toEqual({ a: 0, b: 1, d: n })
+        expect(extended_euclids_algorithm(k * n, n)).toEqual({ a: 0, b: 1, remainder: n })
       }
     }
   })
 
   it("handles large coprime arguments", () => {
-    const { a, b, d } = extended_euclids_algorithm(1_000_003, 999_983)
+    const { a, b, remainder: d } = extended_euclids_algorithm(1_000_003, 999_983)
     expect(d).toBe(1)
     expect(a * 1_000_003 + b * 999_983).toBe(1)
   })

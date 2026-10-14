@@ -13,6 +13,18 @@ function cells(page: Page, row: number) {
   return traceRows(page).nth(row).locator("td")
 }
 
+/**
+ * Scrolled to before it is clicked. The video at the top of the page is a
+ * cross-origin frame, and when a click has to scroll the page first Chromium
+ * still hit-tests against where that frame used to be, so the click lands in
+ * the video and the checkbox never hears it.
+ */
+async function collapse(page: Page) {
+  const box = page.getByLabel("Collapse to start and end")
+  await box.scrollIntoViewIfNeeded()
+  await box.check()
+}
+
 test("runs the default rules to a terminal stage", async ({ page }) => {
   await page.goto(PAGE)
 
@@ -42,7 +54,7 @@ test("asks for a positive step limit when the box is cleared", async ({ page }) 
 
 test("collapses the whole application to its start and end", async ({ page }) => {
   await page.goto(PAGE)
-  await page.getByLabel("Collapse to start and end").check()
+  await collapse(page)
 
   await expect(traceRows(page)).toHaveCount(3)
   /* a^3 b^5 in, c^15 out: the rules multiply. */
@@ -57,7 +69,7 @@ test("collapses the whole application to its start and end", async ({ page }) =>
 
 test("keeps the collapsed ends in step with the step limit", async ({ page }) => {
   await page.goto(PAGE)
-  await page.getByLabel("Collapse to start and end").check()
+  await collapse(page)
   await page.getByLabel("Maximum steps").fill("1")
 
   await expect(traceRows(page)).toHaveCount(2)

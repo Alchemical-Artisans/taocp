@@ -24,8 +24,13 @@ async function ruleAt(page: Page, j: number) {
 test("exports the rule table as CSV", async ({ page }) => {
   await page.goto(PAGE)
 
+  /* Scrolled to first: a click that has to scroll the page lands in the video
+     frame at the top instead, since Chromium hit-tests against where that
+     frame was before the scroll. */
+  const exportButton = page.getByRole("button", { name: "Export CSV" })
+  await exportButton.scrollIntoViewIfNeeded()
   const downloaded = page.waitForEvent("download")
-  await page.getByRole("button", { name: "Export CSV" }).click()
+  await exportButton.click()
   const download = await downloaded
 
   expect(download.suggestedFilename()).toBe("a-star-rules.csv")

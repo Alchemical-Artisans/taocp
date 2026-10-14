@@ -1125,8 +1125,11 @@ $$
    width: 6rem;
  }
 
+ /* The forms plugin draws the box at 1rem with appearance: none, so `auto`
+    would leave it no width at all, only its border. */
  .trace-controls input[type="checkbox"] {
-   width: auto;
+   flex: none;
+   width: 1rem;
  }
 
  table.trace td.elided {

@@ -143,7 +143,7 @@
 <h2 id="diagramming">Creating Diagrams</h2>
 
 <p>
-  To help you explore Assertions within diagrams more extensively, here is a tool to assist you in creating them and labelling assertions. Connect to other steps by mentioning their label (e.g. A1, A2, etc.). To branch, state "If condition, whatever." The word "terminate" signals the end of the algorithm. If you hover over or click a step in the diagram, it will show what's needed to prove that step. 
+  To help you explore Assertions within diagrams more extensively, here is a tool to assist you in creating them and labelling assertions. Connect to other steps by mentioning their label (e.g. X1, X2, etc.). To branch, state "If condition, whatever." The word "terminate" signals the end of the algorithm. If you hover over or click a step in the diagram, it will show what's needed to prove that step. 
 </p>
 
 <AssertionDiagram initial={openingAlgorithm} />

@@ -259,7 +259,7 @@
   </tbody>
 </table>
 
-<h2 id="implementation">Implementation</h2>
+<h3 id="implementation">Implementation</h3>
 
 <CodeTabs>
   <!-- Rendered from the modules the unit tests import, so the page can't drift
@@ -290,8 +290,8 @@
         accTitle: Flowchart of Algorithm F, Factorial
         accDescr: Start leads to F1, Initialize f. F1 leads to F2, is it 1. If no, F2 leads to F3, Reduce, which loops back to F2. If yes, F2 leads to Result.
         F1[F1. Initialize $$f$$.]
-        F2[Is it 1?]
-        F3[Reduce.]
+        F2[F2. Is it 1?]
+        F3[F3. Reduce.]
         Start --> F1 --> F2 -- No --> F3 --> F2
         F2 -- Yes --> Result
         `}

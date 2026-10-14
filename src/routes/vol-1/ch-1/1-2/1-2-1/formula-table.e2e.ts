@@ -149,7 +149,8 @@ test("stops adding formulas once the names run out", async ({ page }) => {
   for (let i = 0; i < 12 && (await add.isEnabled()); i++) await add.click()
 
   await expect(page.getByRole("textbox", { name: "w(x)", exact: true })).toBeVisible()
-  await expect(page.getByRole("textbox")).toHaveCount(10)
+  /* Counted within the list, since the page has other tools with boxes of their own. */
+  await expect(page.locator(".entries").getByRole("textbox")).toHaveCount(10)
   await expect(add).toBeDisabled()
 })
 

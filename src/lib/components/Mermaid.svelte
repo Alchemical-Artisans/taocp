@@ -20,9 +20,18 @@
      * line of prose, in both directions.
      */
     algorithm?: string
+    /**
+     * Ids of further nodes to outline, for a diagram that lights its own nodes
+     * rather than following the prose.
+     */
+    lit?: readonly string[]
+    /** Called with a node's id and element as the pointer enters it, and with null as it leaves. */
+    onnodehover?: (node: { id: string; element: Element } | null) => void
+    /** Called with a node's id and element when it is clicked or tapped. */
+    onnodeclick?: (node: { id: string; element: Element }) => void
   }
 
-  let { chart, children, algorithm }: Props = $props()
+  let { chart, children, algorithm, lit = [], onnodehover, onnodeclick }: Props = $props()
 
   let figure: HTMLElement | undefined = $state()
 
@@ -123,17 +132,46 @@
   })
 
   $effect(() => {
-    if (!svg || !algorithm) return
-    const lit = highlight.step
-    for (const { node, step } of nodes()) node.classList.toggle("lit", step === lit)
+    if (!svg || (!onnodehover && !onnodeclick)) return
+
+    const listening = allNodes().map(({ node, step: id }) => {
+      const target = { id, element: node }
+      const enter = () => onnodehover?.(target)
+      const leave = () => onnodehover?.(null)
+      const click = () => onnodeclick?.(target)
+      node.addEventListener("mouseenter", enter)
+      node.addEventListener("mouseleave", leave)
+      node.addEventListener("click", click)
+      return () => {
+        node.removeEventListener("mouseenter", enter)
+        node.removeEventListener("mouseleave", leave)
+        node.removeEventListener("click", click)
+      }
+    })
+
+    return () => listening.forEach((stop) => stop())
+  })
+
+  /* One pass for both sources of light, so neither clears what the other set. */
+  $effect(() => {
+    if (!svg || (!algorithm && lit.length === 0)) return
+    const step = algorithm ? highlight.step : null
+    for (const { node, step: id } of allNodes()) {
+      node.classList.toggle("lit", id === step || lit.includes(id))
+    }
   })
 
   /* Mermaid names a node `mermaid-<render>-flowchart-<id>-<index>`, and the id
      in the middle is what the diagram source called it. */
+  function allNodes(): { node: Element; step: string }[] {
+    return [...(figure?.querySelectorAll("g.node") ?? [])].map((node) => ({
+      node,
+      step: node.id.match(/-flowchart-(.+)-\d+$/)?.[1] ?? "",
+    }))
+  }
+
   function nodes(): { node: Element; step: string }[] {
-    return [...(figure?.querySelectorAll("g.node") ?? [])]
-      .map((node) => ({ node, step: node.id.match(/-flowchart-(.+)-\d+$/)?.[1] ?? "" }))
-      .filter(({ step }) => step.startsWith(algorithm ?? "\u0000"))
+    return allNodes().filter(({ step }) => step.startsWith(algorithm ?? "\u0000"))
   }
 
   /* Mermaid picks its own palette, which would sit oddly against the page in

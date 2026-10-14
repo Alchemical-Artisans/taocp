@@ -6,6 +6,7 @@
  import faithfulSource from "$lib/algorithms/extended-euclid/faithful.ts?raw"
  import idiomaticSource from "$lib/algorithms/extended-euclid/idiomatic.ts?raw"
     import CodeTabs from "$lib/components/CodeTabs.svelte"
+ import AssertionDiagram from "$lib/components/AssertionDiagram.svelte"
 
  let m: number | null = $state(1769)
  let n: number | null = $state(551)
@@ -37,6 +38,20 @@
  const openingFormulas = ["x^2", "2x - 1", "\\sum_{k=1}^{x} g(k)", recurrence].map((tex, index) =>
    tex.replaceAll("\\self", NAMES[index]),
  )
+
+ /* The author's own sketch of the input: steps laid out as in 1.1, with each
+    assertion written just after the step it leaves. */
+ const openingAlgorithm = [
+   "Algorithm X",
+   "A1 [Start => X1]: Initial assertion",
+   "X1: something",
+   "A2 [X1 => X2]: something",
+   "X2: If condition, terminate",
+   "A3 [X2 => End]: Final assertion",
+   "A4 [X2 => X3]: something",
+   "X3: Go back to X1",
+   "A5 [X3 => X1]: something",
+ ].join("\n")
 
  /** `a \cdot m + b \cdot n = d`, a negative coefficient written as a subtraction. */
  function bezout(step: Step, m: number, n: number): string {
@@ -131,7 +146,7 @@
   To help you explore Assertions within diagrams more extensively, here is a tool to assist you in creating them and labelling assertions. Connect to other steps by mentioning their label (e.g. A1, A2, etc.). To branch, state "If condition, whatever." The word "terminate" signals the end of the algorithm. If you hover over or click a step in the diagram, it will show what's needed to prove that step. 
 </p>
 
-TODO: Claude creates this tool
+<AssertionDiagram initial={openingAlgorithm} />
 
 <style>
   .inputs {

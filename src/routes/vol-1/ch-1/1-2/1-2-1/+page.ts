@@ -5,6 +5,7 @@ export const load: PageLoad = () => {
     onThisPage: [
       { id: "closed-forms", label: "Closed Forms" },
       { id: "extended-euclids-algorithm", label: "Extended Euclid's Algorithm" },
+      { id: "diagramming", label: "Creating Diagrams" },
     ],
   }
 }

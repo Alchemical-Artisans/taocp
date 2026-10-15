@@ -88,6 +88,25 @@ test("keeps a clicked step's proof up once the pointer leaves", async ({ page })
   await expect(proof(page)).toHaveCount(0)
 })
 
+/* An assertion row names its arrow in brackets after its label. */
+function arrow(page: Page, name: string) {
+  return field(page, name).locator("xpath=preceding-sibling::span[contains(@class, 'arrow')]")
+}
+
+test("puts an assertion row on every arrow, under the step it leaves", async ({ page }) => {
+  await page.goto(PAGE)
+
+  const names = await tool(page)
+    .locator(".rows li .name")
+    .evaluateAll((spans) => spans.map((span) => span.textContent))
+  expect(names).toEqual(["A1", "X1.", "A2", "X2.", "A3", "A4", "X3.", "A5"])
+  await expect(arrow(page, "A3")).toHaveText("[X2 ⇒ End]")
+  await expect(arrow(page, "A4")).toHaveText("[X2 ⇒ X3]")
+  /* There is no adding or removing an assertion: there is one per arrow. */
+  await expect(tool(page).getByRole("button", { name: /assertion/i })).toHaveCount(0)
+  await expect(tool(page).getByRole("button", { name: /^Remove A/ })).toHaveCount(0)
+})
+
 test("renames the steps, and the steps they name, under a new letter", async ({ page }) => {
   await page.goto(PAGE)
 
@@ -95,8 +114,8 @@ test("renames the steps, and the steps they name, under a new letter", async ({ 
   await expect(node(page, "F1")).toBeVisible()
   await expect(node(page, "X1")).toHaveCount(0)
   await expect(field(page, "F3")).toHaveValue("Go back to F1")
-  await expect(tool(page).getByLabel("A1 to")).toHaveValue("1")
-  await expect(tool(page).getByLabel("A1 to").locator("option:checked")).toHaveText("F1")
+  await expect(arrow(page, "A1")).toHaveText("[Start ⇒ F1]")
+  await expect(field(page, "A1")).toHaveValue("Initial assertion")
   await expect(errors(page)).toHaveCount(0)
 })
 
@@ -109,29 +128,33 @@ test("refuses a letter the assertions already use", async ({ page }) => {
   await expect(node(page, "X1")).toBeVisible()
 })
 
-test("adds steps and assertions at the end", async ({ page }) => {
+test("gives a new step's arrow an assertion of its own", async ({ page }) => {
   await page.goto(PAGE)
 
   await tool(page).getByRole("button", { name: "Add step" }).click()
   await field(page, "X4").fill("Terminate.")
-  await tool(page).getByRole("button", { name: "Add assertion" }).click()
-
-  /* It opens on the newest step's arrow out to End. */
-  await expect(tool(page).getByLabel("A6 from")).toHaveValue("4")
-  await expect(tool(page).getByLabel("A6 to")).toHaveValue("end")
+  await expect(arrow(page, "A6")).toHaveText("[X4 ⇒ End]")
   await field(page, "A6").fill("done")
 
   await expect(node(page, "X4")).toBeVisible()
   await expect(node(page, "A6")).toBeVisible()
 })
 
-test("lists what a removed step leaves dangling", async ({ page }) => {
+test("redraws the arrows, and their assertions, when a step is removed", async ({ page }) => {
   await page.goto(PAGE)
 
   await tool(page).getByRole("button", { name: "Remove X3" }).click()
   await expect(field(page, "X3")).toHaveCount(0)
-  await expect(errors(page)).toHaveText([
-    "A4 names X3, which is not a step.",
-    "A5 names X3, which is not a step.",
-  ])
+  /* X2's other arm now falls through to End, a new arrow with nothing said on it. */
+  await expect(arrow(page, "A4")).toHaveText("[X2 ⇒ End]")
+  await expect(field(page, "A4")).toHaveValue("")
+  await expect(field(page, "A5")).toHaveCount(0)
+  await expect(errors(page)).toHaveCount(0)
+})
+
+test("says when a step goes to one that does not exist", async ({ page }) => {
+  await page.goto(PAGE)
+
+  await field(page, "X3").fill("Go back to X9")
+  await expect(errors(page)).toHaveText(["X3 goes to X9, which is not a step."])
 })

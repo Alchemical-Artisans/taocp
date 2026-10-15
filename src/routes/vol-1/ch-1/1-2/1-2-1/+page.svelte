@@ -7,7 +7,6 @@
   import idiomaticSource from "$lib/algorithms/extended-euclid/idiomatic.ts?raw"
   import CodeTabs from "$lib/components/CodeTabs.svelte"
   import AssertionDiagram from "$lib/components/AssertionDiagram.svelte"
-  import type { Row } from "$lib/assertions/flow"
 
   let m: number | null = $state(1769)
   let n: number | null = $state(551)
@@ -40,17 +39,15 @@
     tex.replaceAll("\\self", NAMES[index]),
   )
 
-  /* The author's own sketch of the input: steps laid out as in 1.1, with each
-    assertion written just after the step it leaves. */
-  const openingAlgorithm: Row[] = [
-    { kind: "assertion", from: "start", to: 1, text: "Initial assertion" },
-    { kind: "step", text: "something" },
-    { kind: "assertion", from: 1, to: 2, text: "something" },
-    { kind: "step", text: "If condition, terminate" },
-    { kind: "assertion", from: 2, to: "end", text: "Final assertion" },
-    { kind: "assertion", from: 2, to: 3, text: "something" },
-    { kind: "step", text: "Go back to X1" },
-    { kind: "assertion", from: 3, to: 1, text: "something" },
+  /* The author's own sketch of the input: the steps as laid out in 1.1, and
+     what holds on each arrow, read from Start and then out of each step in turn. */
+  const openingSteps = ["something", "If condition, terminate", "Go back to X1"]
+  const openingAssertions = [
+    "Initial assertion",
+    "something",
+    "Final assertion",
+    "something",
+    "something",
   ]
 
   /** `a \cdot m + b \cdot n = d`, a negative coefficient written as a subtraction. */
@@ -150,7 +147,7 @@
   that step.
 </p>
 
-<AssertionDiagram rows={openingAlgorithm} />
+<AssertionDiagram steps={openingSteps} assertions={openingAssertions} />
 
 <style>
   .inputs {

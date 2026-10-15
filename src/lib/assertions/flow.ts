@@ -19,11 +19,11 @@ export const DEFAULT_LETTER = "X"
 /** Assertions are A1, A2, …, so an algorithm cannot also be lettered A. */
 const ASSERTION_LETTER = "A"
 
-/** Where an assertion's arrow starts or ends: Start, End, or a step's number. */
-export type Endpoint = "start" | "end" | number
-
-export type Row =
-  { kind: "step"; text: string } | { kind: "assertion"; from: Endpoint; to: Endpoint; text: string }
+/**
+ * A step as the reader entered it. The key stays with the step however it is
+ * renumbered, so what was said about the arrows into and out of it stays too.
+ */
+export type StepInput = { key: string | number; text: string }
 
 export type Step = {
   /** `X1`, `X2`: the letter followed by the number. */
@@ -34,19 +34,21 @@ export type Step = {
   body: string
 }
 
-export type Assertion = {
-  id: string
-  /** The step, or `Start`, that the arrow leaves. */
-  from: string
-  /** The step, or `End`, that the arrow enters. */
-  to: string
-  text: string
-}
-
 /** Which arm of a branch an arrow is, by the test that sends control along it. */
 export type Condition = { text: string; negated: boolean }
 
 export type Edge = { from: string; to: string; condition: Condition | null }
+
+/** What holds on one arrow. There is one for every arrow, in reading order. */
+export type Assertion = Edge & {
+  id: string
+  /**
+   * Names the arrow by the keys of the steps at its ends, so what the reader
+   * wrote about it survives renumbering and a change of letter.
+   */
+  key: string
+  text: string
+}
 
 export type Flow = {
   letter: string
@@ -57,12 +59,7 @@ export type Flow = {
 }
 
 /** What proving a step comes to: one precondition, one test, one postcondition. */
-export type Obligation = {
-  /** An assertion id, or null where the arrow in carries none. */
-  pre: string | null
-  condition: Condition | null
-  post: string | null
-}
+export type Obligation = { pre: string; condition: Condition | null; post: string }
 
 /**
  * The letter as typed, if it can letter an algorithm: one letter, and not the
@@ -75,51 +72,36 @@ export function letterError(letter: string): string | null {
   return null
 }
 
-/** `X3` for step 3 of Algorithm X; Start and End by name. */
-export function endpointId(letter: string, point: Endpoint): string {
-  if (point === "start") return START
-  if (point === "end") return END
-  return `${letter}${point}`
-}
-
-export function build(letter: string, rows: Row[]): Flow {
+/**
+ * The algorithm the steps make, with an assertion on every arrow: A1 on the
+ * arrow from Start, then each step's arrows out in turn. `said` holds what the
+ * reader has written about each, by its key.
+ */
+export function build(
+  letter: string,
+  inputs: StepInput[],
+  said: Record<string, string> = {},
+): Flow {
   const errors: string[] = []
   const invalid = letterError(letter)
   if (invalid) errors.push(invalid)
   const name = invalid ? DEFAULT_LETTER : letter.trim().toUpperCase()
 
-  const steps: Step[] = []
-  const assertions: Assertion[] = []
-  for (const row of rows) {
-    if (row.kind === "step") {
-      steps.push({ id: `${name}${steps.length + 1}`, ...titled(row.text.trim()) })
-    } else {
-      assertions.push({
-        id: `A${assertions.length + 1}`,
-        from: endpointId(name, row.from),
-        to: endpointId(name, row.to),
-        text: row.text.trim(),
-      })
-    }
-  }
+  const steps = inputs.map((input, i) => ({ id: `${name}${i + 1}`, ...titled(input.text.trim()) }))
+  const keyOf = new Map<string, string>([
+    [START, "start"],
+    [END, "end"],
+    ...steps.map((step, i): [string, string] => [step.id, String(inputs[i].key)]),
+  ])
 
   const ids = new Set(steps.map((step) => step.id))
   const edges = flow(steps, name, ids, errors)
 
-  for (const assertion of assertions) {
-    const unknown = [assertion.from, assertion.to].filter(
-      (point) => point !== START && point !== END && !ids.has(point),
-    )
-    if (assertion.from === END || assertion.to === START) {
-      errors.push(`${assertion.id} runs backwards: arrows leave Start and enter End.`)
-    } else if (unknown.length) {
-      errors.push(`${assertion.id} names ${unknown.join(" and ")}, which is not a step.`)
-    } else if (!edges.some((edge) => edge.from === assertion.from && edge.to === assertion.to)) {
-      errors.push(
-        `${assertion.id} sits on ${assertion.from} ⇒ ${assertion.to}, which no step takes.`,
-      )
-    }
-  }
+  const assertions = edges.map((edge, i) => {
+    const arm = edge.condition?.negated ? "!" : ""
+    const key = `${keyOf.get(edge.from)}>${keyOf.get(edge.to)}${arm}`
+    return { ...edge, id: `A${i + 1}`, key, text: (said[key] ?? "").trim() }
+  })
 
   return { letter: name, steps, assertions, edges, errors }
 }
@@ -231,31 +213,13 @@ function conditional(
 
 /**
  * Every pair of arrows through a step: what holds coming in, the test that
- * picks the way out, and what must hold going out. An arrow with no assertion
- * on it still counts, with null in its place, since the proof needs one there.
+ * picks the way out, and what must hold going out.
  */
 export function obligations(flow: Flow, step: string): Obligation[] {
-  const on = (edge: { from: string; to: string }) => {
-    const found = flow.assertions.filter((a) => a.from === edge.from && a.to === edge.to)
-    return found.length ? found.map((a) => a.id) : [null]
-  }
-
-  /* Arrows an assertion claims but no step takes still belong to the step it
-     names, so a mislabelled assertion shows up where the reader will look. */
-  const claimed: Edge[] = flow.assertions
-    .filter((a) => !flow.edges.some((edge) => edge.from === a.from && edge.to === a.to))
-    .map((a) => ({ from: a.from, to: a.to, condition: null }))
-  const edges = [...flow.edges, ...claimed]
-
-  const ins = edges.filter((edge) => edge.to === step)
-  const outs = edges.filter((edge) => edge.from === step)
-
-  return ins.flatMap((edgeIn) =>
-    on(edgeIn).flatMap((pre) =>
-      outs.flatMap((edgeOut) =>
-        on(edgeOut).map((post) => ({ pre, condition: edgeOut.condition, post })),
-      ),
-    ),
+  const ins = flow.assertions.filter((a) => a.to === step)
+  const outs = flow.assertions.filter((a) => a.from === step)
+  return ins.flatMap((pre) =>
+    outs.map((post) => ({ pre: pre.id, condition: post.condition, post: post.id })),
   )
 }
 
@@ -264,7 +228,7 @@ export function obligations(flow: Flow, step: string): Obligation[] {
  * in a condition is set as text and its `$…$` as maths, so either reads.
  */
 export function obligationTex({ pre, condition, post }: Obligation): string {
-  const label = (id: string | null) => `\\text{${id ?? "?"}}`
+  const label = (id: string) => `\\text{${id}}`
   const test = condition ? ` \\land ${conditionTex(condition)}` : ""
   return `${label(pre)}${test} \\Rightarrow ${label(post)}`
 }
@@ -294,7 +258,7 @@ function escapeText(text: string): string {
  * `links` lists them for drawing over it once Mermaid has laid it out.
  */
 export function chart(flow: Flow): string {
-  const lines = ["flowchart LR"]
+  const lines = ["---", "config:", "  flowchart:", "    minNodeWidth: 0", "---", "flowchart LR"]
 
   lines.push(`  subgraph algorithm["Algorithm ${flow.letter}"]`)
   lines.push("    direction TB")
@@ -307,13 +271,17 @@ export function chart(flow: Flow): string {
     lines.push(`    ${edge.from}${text} ${edge.to}`)
   }
   lines.push("  end")
+  /* Mermaid sizes a triangle from its label, a good deal larger than the
+     label itself, so Start and End are labelled small to keep them small. */
+  lines.push("  classDef terminal font-size:9px")
+  lines.push(`  class ${START},${END} terminal`)
 
   if (flow.assertions.length) {
     lines.push(`  subgraph assertions["Assertions"]`)
     lines.push("    direction TB")
     for (const assertion of flow.assertions) {
       lines.push(
-        `    ${assertion.id}@{ shape: text, label: ${shapeLabel(`${assertion.id}. ${assertion.text}`)} }`,
+        `    ${assertion.id}@{ shape: text, label: ${shapeLabel(assertion.text ? `${assertion.id}. ${assertion.text}` : assertion.id)} }`,
       )
     }
     /* Unlinked, the assertions would share one rank and sit in a row; chained
@@ -336,15 +304,10 @@ export function chart(flow: Flow): string {
 export type Link = { from: string; to: string; style: "dotted" | "dashed" }
 
 export function links(flow: Flow): Link[] {
-  const known = new Set([START, END, ...flow.steps.map((step) => step.id)])
-  return flow.assertions.flatMap((assertion) => {
-    const drawn: Link[] = []
-    if (known.has(assertion.from) && assertion.from !== END)
-      drawn.push({ from: assertion.from, to: assertion.id, style: "dotted" })
-    if (known.has(assertion.to) && assertion.to !== START)
-      drawn.push({ from: assertion.id, to: assertion.to, style: "dashed" })
-    return drawn
-  })
+  return flow.assertions.flatMap((assertion): Link[] => [
+    { from: assertion.from, to: assertion.id, style: "dotted" },
+    { from: assertion.id, to: assertion.to, style: "dashed" },
+  ])
 }
 
 /**

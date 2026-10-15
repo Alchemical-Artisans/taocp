@@ -7,43 +7,58 @@
     START,
     build,
     chart,
-    endpointId,
     letterError,
     links,
     obligationTex,
     obligations,
-    type Endpoint,
-    type Row,
+    type Assertion,
   } from "$lib/assertions/flow"
 
   type Props = {
     /** The algorithm's letter, X unless the page asks for another. */
     letter?: string
-    /** Its steps and assertions, interlaced in the order they are read. */
-    rows?: Row[]
+    /** Its steps, in order. */
+    steps?: string[]
+    /**
+     * What is said on each arrow, in the order the arrows are read: the one
+     * from Start, then each step's arrows out in turn.
+     */
+    assertions?: string[]
   }
 
-  let { letter: initialLetter = DEFAULT_LETTER, rows: initialRows = [] }: Props = $props()
+  let {
+    letter: initialLetter = DEFAULT_LETTER,
+    steps: initialSteps = [],
+    assertions: initialAssertions = [],
+  }: Props = $props()
 
   /* Like the formula tool's opening lines, the opening algorithm is content the
      reader then edits, so it is read once. */
   // svelte-ignore state_referenced_locally
   let letter = $state(initialLetter)
   // svelte-ignore state_referenced_locally
-  let rows = $state(initialRows.map((row, id) => ({ id, ...row })))
-  let nextId = rows.length
+  let steps = $state(initialSteps.map((text, key) => ({ key, text })))
+  let nextKey = steps.length
 
-  const flow = $derived(build(letter, rows))
+  /* What the reader has said on each arrow, by the arrow's key. An arrow that
+     goes away keeps its words here, so they come back if it does. */
+  // svelte-ignore state_referenced_locally
+  let said: Record<string, string> = $state(
+    Object.fromEntries(
+      build(letter, steps).assertions.map((a, i) => [a.key, initialAssertions[i] ?? ""]),
+    ),
+  )
+
+  const flow = $derived(build(letter, steps, said))
   const diagram = $derived(chart(flow))
   const stepIds = $derived(new Set(flow.steps.map((step) => step.id)))
 
-  /** Each row's label, X1 or A1, counted from the top. */
-  const labels = $derived.by(() => {
-    let steps = 0
-    let assertions = 0
-    return rows.map((row) =>
-      row.kind === "step" ? `${flow.letter}${++steps}` : `A${++assertions}`,
-    )
+  /* Each assertion is listed under the step its arrow leaves, the one from
+     Start above them all, so the list reads as the diagram does. */
+  const leaving = $derived.by(() => {
+    const by: Record<string, Assertion[]> = {}
+    for (const assertion of flow.assertions) (by[assertion.from] ??= []).push(assertion)
+    return by
   })
 
   /**
@@ -57,45 +72,18 @@
     const after = value.trim().toUpperCase()
     if (after === before) return
     const named = new RegExp(`\\b${before}(\\d+)\\b`, "g")
-    for (const row of rows)
-      if (row.kind === "step") row.text = row.text.replace(named, `${after}$1`)
+    for (const step of steps) step.text = step.text.replace(named, `${after}$1`)
   }
 
   function addStep() {
-    rows.push({ id: nextId++, kind: "step", text: "" })
+    steps.push({ key: nextKey++, text: "" })
   }
 
-  /* A new assertion most often follows the step just written, and nothing after
-     it exists yet, so it opens on that step's arrow out to End. */
-  function addAssertion() {
-    const steps = flow.steps.length
-    rows.push({
-      id: nextId++,
-      kind: "assertion",
-      from: steps ? steps : "start",
-      to: "end",
-      text: "",
-    })
-  }
-
-  /* Removing a step renumbers the steps after it. What the reader wrote, and the
-     ends of their assertions, are left as they were rather than being rewritten
-     underneath them, as the rule table in 1.1 treats its stage numbers. */
-  function removeRow(index: number) {
-    rows.splice(index, 1)
-  }
-
-  /** Every place an arrow can leave from, or enter, as a select offers them. */
-  function endpoints(end: "from" | "to", current: Endpoint): Endpoint[] {
-    const numbers = flow.steps.map((_, i) => i + 1)
-    /* A step that has since been removed stays selectable, so the select shows
-       what the assertion actually names while the error says why it is wrong. */
-    if (typeof current === "number" && !numbers.includes(current)) numbers.push(current)
-    return end === "from" ? ["start", ...numbers] : [...numbers, "end"]
-  }
-
-  function parseEndpoint(value: string): Endpoint {
-    return value === "start" || value === "end" ? value : Number(value)
+  /* Removing a step renumbers the steps after it. What the reader wrote is left
+     as it was rather than being rewritten underneath them, as the rule table in
+     1.1 treats its stage numbers. */
+  function removeStep(index: number) {
+    steps.splice(index, 1)
   }
 
   const SVG = "http://www.w3.org/2000/svg"
@@ -248,34 +236,31 @@
     </label>
   </p>
 
+  {#snippet assertionRow(assertion: Assertion)}
+    <li class="assertion">
+      <span class="name mono">{assertion.id}</span>
+      <span class="arrow mono">[{assertion.from} &rArr; {assertion.to}]</span>
+      <input
+        class="text mono"
+        type="text"
+        spellcheck="false"
+        autocapitalize="off"
+        autocomplete="off"
+        aria-label={assertion.id}
+        value={said[assertion.key] ?? ""}
+        oninput={(event) => (said[assertion.key] = event.currentTarget.value)}
+      />
+    </li>
+  {/snippet}
+
   <ol class="rows">
-    {#each rows as row, index (row.id)}
-      {@const name = labels[index]}
-      <li class:assertion={row.kind === "assertion"}>
-        <span class="name mono">{row.kind === "step" ? `${name}.` : name}</span>
-        {#if row.kind === "assertion"}
-          <span class="arrow">
-            [<select
-              aria-label="{name} from"
-              value={String(row.from)}
-              onchange={(event) => (row.from = parseEndpoint(event.currentTarget.value))}
-            >
-              {#each endpoints("from", row.from) as point (point)}
-                <option value={String(point)}>{endpointId(flow.letter, point)}</option>
-              {/each}
-            </select>
-            &rArr;
-            <select
-              aria-label="{name} to"
-              value={String(row.to)}
-              onchange={(event) => (row.to = parseEndpoint(event.currentTarget.value))}
-            >
-              {#each endpoints("to", row.to) as point (point)}
-                <option value={String(point)}>{endpointId(flow.letter, point)}</option>
-              {/each}
-            </select>]
-          </span>
-        {/if}
+    {#each leaving[START] ?? [] as assertion (assertion.key)}
+      {@render assertionRow(assertion)}
+    {/each}
+    {#each steps as step, index (step.key)}
+      {@const name = flow.steps[index].id}
+      <li>
+        <span class="name mono">{name}.</span>
         <input
           class="text mono"
           type="text"
@@ -283,21 +268,23 @@
           autocapitalize="off"
           autocomplete="off"
           aria-label={name}
-          bind:value={row.text}
+          bind:value={step.text}
         />
         <button
           type="button"
           class="tool-button"
           aria-label="Remove {name}"
-          onclick={() => removeRow(index)}>&times;</button
+          onclick={() => removeStep(index)}>&times;</button
         >
       </li>
+      {#each leaving[name] ?? [] as assertion (assertion.key)}
+        {@render assertionRow(assertion)}
+      {/each}
     {/each}
   </ol>
 
   <p class="controls">
     <button type="button" class="tool-button" onclick={addStep}>Add step</button>
-    <button type="button" class="tool-button" onclick={addAssertion}>Add assertion</button>
   </p>
 
   {#if flow.errors.length}
@@ -384,16 +371,16 @@
   }
 
   .arrow {
-    display: inline-flex;
-    align-items: center;
-    gap: 0.25rem;
+    font-size: 0.85rem;
+    color: var(--ink-soft);
     white-space: nowrap;
   }
 
-  .arrow select {
-    width: auto;
-    padding: 2px 1.8rem 2px 6px;
-    font-size: 0.9rem;
+  /* Assertion rows have no remove button, since there is one for every arrow
+     however many that is; the gap keeps their inputs flush with the steps'. */
+  .rows li.assertion::after {
+    content: "";
+    flex: 0 0 2.1rem;
   }
 
   .text {

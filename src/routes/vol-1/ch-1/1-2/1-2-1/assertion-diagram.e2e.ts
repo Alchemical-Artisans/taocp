@@ -158,3 +158,33 @@ test("says when a step goes to one that does not exist", async ({ page }) => {
   await field(page, "X3").fill("Go back to X9")
   await expect(errors(page)).toHaveText(["X3 goes to X9, which is not a step."])
 })
+
+/* Mermaid draws its triangles as tall as they are wide with the label where
+   they have narrowed; Start and End are redrawn about equilateral, with the
+   label inside their wide end at the size every other label is. */
+test("draws Start and End as triangles that fit their labels", async ({ page }) => {
+  await page.goto(PAGE)
+
+  for (const id of ["Start", "End"]) {
+    const triangle = node(page, id).locator("polygon.terminal")
+    await expect(triangle).toHaveCount(1)
+    const shape = (await triangle.boundingBox())!
+    expect(shape.height / shape.width).toBeCloseTo(Math.sqrt(3) / 2, 1)
+
+    const label = (await node(page, id).locator("g.label").boundingBox())!
+    expect(label.x).toBeGreaterThan(shape.x)
+    expect(label.x + label.width).toBeLessThan(shape.x + shape.width)
+    expect(label.y).toBeGreaterThanOrEqual(shape.y)
+    expect(label.y + label.height).toBeLessThanOrEqual(shape.y + shape.height)
+
+    const size = await node(page, id)
+      .locator("g.label span")
+      .first()
+      .evaluate((span) => getComputedStyle(span).fontSize)
+    const stepSize = await node(page, "X1")
+      .locator("g.label span")
+      .first()
+      .evaluate((span) => getComputedStyle(span).fontSize)
+    expect(size).toBe(stepSize)
+  }
+})

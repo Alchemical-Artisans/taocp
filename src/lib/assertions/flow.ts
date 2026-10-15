@@ -271,10 +271,6 @@ export function chart(flow: Flow): string {
     lines.push(`    ${edge.from}${text} ${edge.to}`)
   }
   lines.push("  end")
-  /* Mermaid sizes a triangle from its label, a good deal larger than the
-     label itself, so Start and End are labelled small to keep them small. */
-  lines.push("  classDef terminal font-size:9px")
-  lines.push(`  class ${START},${END} terminal`)
 
   if (flow.assertions.length) {
     lines.push(`  subgraph assertions["Assertions"]`)

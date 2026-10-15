@@ -167,7 +167,6 @@ describe("chart", () => {
     expect(source).toMatch(/Start@\{ shape: flip-tri/)
     expect(source).toMatch(/End@\{ shape: tri/)
     expect(source).toContain("minNodeWidth: 0")
-    expect(source).toContain("class Start,End terminal")
     expect(source).toContain('X1["X1. something"]')
     expect(source).toContain("A1@{ shape: text, label: 'A1. Initial assertion' }")
     /* Nothing said yet: the assertion is still drawn, by its name alone. */

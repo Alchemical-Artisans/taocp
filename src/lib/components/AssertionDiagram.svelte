@@ -98,6 +98,62 @@
    * the assertion, or back; the assertion's postcondition line meets it above
    * its middle and its precondition line below, so the two do not merge.
    */
+  function decorate(svg: SVGSVGElement) {
+    for (const node of svg.querySelectorAll("g.node")) {
+      const id = node.id.match(/-flowchart-(.+)-\d+$/)?.[1]
+      if (id === START) reshapeTerminal(node, "down")
+      if (id === END) reshapeTerminal(node, "up")
+    }
+    drawLinks(svg)
+  }
+
+  /**
+   * Redraw Start or End as a triangle about as tall as an equilateral one, with
+   * its label in the wide end. Mermaid draws its triangles as tall as they are
+   * wide and centres the label where they have narrowed, so a readable label
+   * makes a huge triangle. The tip stays where Mermaid put it, since that is
+   * where its arrow meets the node.
+   */
+  function reshapeTerminal(node: Element, pointing: "down" | "up") {
+    if (node.querySelector(":scope > polygon.terminal")) return
+    const outline = node.querySelector(":scope > g.outer-path, :scope > path, :scope > polygon")
+    const label = node.querySelector<SVGGElement>(":scope > g.label")
+    const text = label?.querySelector("foreignObject")
+    if (!(outline instanceof SVGGraphicsElement) || !label || !text) return
+
+    const paths = [...outline.querySelectorAll("path, polygon")]
+    const fill = paths.map((p) => p.getAttribute("fill")).find((f) => f && f !== "none")
+    const stroke = paths.map((p) => p.getAttribute("stroke")).find((f) => f && f !== "none")
+    const half = outline.getBBox().height / 2
+
+    const labelWidth = Number(text.getAttribute("width"))
+    const labelHeight = Number(text.getAttribute("height"))
+    /* Wide enough that the label clears both sides at the edge of its band
+       nearest the tip, with a margin of `inset` all round. */
+    const inset = 5
+    const base = labelWidth + 2 * inset + (labelHeight + inset) / Math.sin(Math.PI / 3)
+    const height = Math.min((base * Math.sqrt(3)) / 2, 2 * half)
+
+    const tip = pointing === "down" ? half : -half
+    const baseY = pointing === "down" ? half - height : -half + height
+    const towardTip = pointing === "down" ? 1 : -1
+    const labelCentre = baseY + towardTip * (inset + labelHeight / 2)
+
+    const triangle = document.createElementNS(SVG, "polygon")
+    triangle.classList.add("terminal")
+    triangle.setAttribute("points", `0,${tip} ${-base / 2},${baseY} ${base / 2},${baseY}`)
+    if (fill) triangle.setAttribute("fill", fill)
+    if (stroke) triangle.setAttribute("stroke", stroke)
+    triangle.setAttribute("stroke-width", "1.3")
+
+    outline.remove()
+    node.prepend(triangle)
+    label.setAttribute(
+      "transform",
+      `translate(${-labelWidth / 2}, ${labelCentre - labelHeight / 2})`,
+    )
+  }
+
   function drawLinks(svg: SVGSVGElement) {
     svg.querySelector("g.assertion-links")?.remove()
     const toSvg = svg.getScreenCTM()?.inverse()
@@ -299,7 +355,7 @@
     <Mermaid
       chart={diagram}
       {lit}
-      onrender={drawLinks}
+      onrender={decorate}
       onnodehover={(node) => (hovered = node && place(node.id, node.element))}
       onnodeclick={(node) => {
         const next = place(node.id, node.element)

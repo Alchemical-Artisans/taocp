@@ -36,6 +36,10 @@
      reader then edits, so it is read once. */
   // svelte-ignore state_referenced_locally
   let letter = $state(initialLetter)
+  /* The letter the steps are named by: the reader's, once it is one that can
+     letter an algorithm, and the last such until then. */
+  // svelte-ignore state_referenced_locally
+  let named = $state(initialLetter.trim().toUpperCase())
   // svelte-ignore state_referenced_locally
   let steps = $state(initialSteps.map((text, key) => ({ key, text })))
   let nextKey = steps.length
@@ -49,7 +53,7 @@
     ),
   )
 
-  const flow = $derived(build(letter, steps, said))
+  const flow = $derived(build(letter, steps, said, named))
   const diagram = $derived(chart(flow))
   const stepIds = $derived(new Set(flow.steps.map((step) => step.id)))
 
@@ -62,17 +66,20 @@
   })
 
   /**
-   * A new letter renames the steps, so "go back to X1" in a step's text is
-   * renamed with them; anything else the reader wrote is left alone.
+   * A new letter renames the steps, so "go back to E1" in a step's text is
+   * renamed with them; anything else the reader wrote is left alone. Clearing
+   * the box on the way to a new letter renames nothing: the steps keep the old
+   * one until the new one arrives.
    */
   function setLetter(value: string) {
-    const before = flow.letter
     letter = value
     if (letterError(value)) return
+    const before = named
     const after = value.trim().toUpperCase()
+    named = after
     if (after === before) return
-    const named = new RegExp(`\\b${before}(\\d+)\\b`, "g")
-    for (const step of steps) step.text = step.text.replace(named, `${after}$1`)
+    const reference = new RegExp(`\\b${before}(\\d+)\\b`, "g")
+    for (const step of steps) step.text = step.text.replace(reference, `${after}$1`)
   }
 
   function addStep() {

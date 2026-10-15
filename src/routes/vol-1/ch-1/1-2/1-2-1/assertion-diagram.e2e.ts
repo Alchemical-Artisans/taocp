@@ -22,7 +22,7 @@ function errors(page: Page) {
   return tool(page).locator(".errors li")
 }
 
-/* Exact, because "X1" otherwise also matches "Remove X1" and "A1 from". */
+/* Exact, because "E1" otherwise also matches "Remove E1" and "A1 from". */
 function field(page: Page, name: string) {
   return tool(page).getByRole("textbox", { name, exact: true })
 }
@@ -30,14 +30,14 @@ function field(page: Page, name: string) {
 test("draws the opening algorithm with its assertions beside its steps", async ({ page }) => {
   await page.goto(PAGE)
 
-  for (const id of ["Start", "X1", "X2", "X3", "End"]) await expect(node(page, id)).toBeVisible()
+  for (const id of ["Start", "E1", "E2", "E3", "End"]) await expect(node(page, id)).toBeVisible()
   for (const id of ["A1", "A2", "A3", "A4", "A5"]) await expect(node(page, id)).toBeVisible()
   await expect(tool(page).locator("g.cluster")).toHaveCount(2)
 
   /* Side by side: every assertion is to the right of every step. */
   const stepsRight = Math.max(
     ...(await Promise.all(
-      ["X1", "X2", "X3"].map(async (id) => {
+      ["E1", "E2", "E3"].map(async (id) => {
         const box = await node(page, id).boundingBox()
         return box!.x + box!.width
       }),
@@ -50,14 +50,14 @@ test("draws the opening algorithm with its assertions beside its steps", async (
   /* One dotted line out of each assertion's step, one dashed line into the next. */
   await expect(tool(page).locator("g.assertion-links path.dotted")).toHaveCount(5)
   await expect(tool(page).locator("g.assertion-links path.dashed")).toHaveCount(5)
-  await expect(tool(page).locator("path.dotted[data-from='X1'][data-to='A2']")).toHaveCount(1)
-  await expect(tool(page).locator("path.dashed[data-from='A2'][data-to='X2']")).toHaveCount(1)
+  await expect(tool(page).locator("path.dotted[data-from='E1'][data-to='A2']")).toHaveCount(1)
+  await expect(tool(page).locator("path.dashed[data-from='A2'][data-to='E2']")).toHaveCount(1)
 })
 
 test("shows each precondition against each postcondition on hover", async ({ page }) => {
   await page.goto(PAGE)
 
-  await node(page, "X1").hover()
+  await node(page, "E1").hover()
   await expect(proof(page)).toHaveText([
     "\\text{A1} \\Rightarrow \\text{A2}",
     "\\text{A5} \\Rightarrow \\text{A2}",
@@ -69,7 +69,7 @@ test("shows each precondition against each postcondition on hover", async ({ pag
 test("puts a branch's test on one arm and its negation on the other", async ({ page }) => {
   await page.goto(PAGE)
 
-  await node(page, "X2").hover()
+  await node(page, "E2").hover()
   await expect(proof(page)).toHaveText([
     "\\text{A2} \\land (\\text{condition}) \\Rightarrow \\text{A3}",
     "\\text{A2} \\land \\lnot(\\text{condition}) \\Rightarrow \\text{A4}",
@@ -79,11 +79,11 @@ test("puts a branch's test on one arm and its negation on the other", async ({ p
 test("keeps a clicked step's proof up once the pointer leaves", async ({ page }) => {
   await page.goto(PAGE)
 
-  await node(page, "X3").click()
+  await node(page, "E3").click()
   await page.mouse.move(0, 0)
   await expect(proof(page)).toHaveText(["\\text{A4} \\Rightarrow \\text{A5}"])
 
-  await node(page, "X3").click()
+  await node(page, "E3").click()
   await page.mouse.move(0, 0)
   await expect(proof(page)).toHaveCount(0)
 })
@@ -99,9 +99,9 @@ test("puts an assertion row on every arrow, under the step it leaves", async ({ 
   const names = await tool(page)
     .locator(".rows li .name")
     .evaluateAll((spans) => spans.map((span) => span.textContent))
-  expect(names).toEqual(["A1", "X1.", "A2", "X2.", "A3", "A4", "X3.", "A5"])
-  await expect(arrow(page, "A3")).toHaveText("[X2 ⇒ End]")
-  await expect(arrow(page, "A4")).toHaveText("[X2 ⇒ X3]")
+  expect(names).toEqual(["A1", "E1.", "A2", "E2.", "A3", "A4", "E3.", "A5"])
+  await expect(arrow(page, "A3")).toHaveText("[E2 ⇒ End]")
+  await expect(arrow(page, "A4")).toHaveText("[E2 ⇒ E3]")
   /* There is no adding or removing an assertion: there is one per arrow. */
   await expect(tool(page).getByRole("button", { name: /assertion/i })).toHaveCount(0)
   await expect(tool(page).getByRole("button", { name: /^Remove A/ })).toHaveCount(0)
@@ -112,10 +112,29 @@ test("renames the steps, and the steps they name, under a new letter", async ({ 
 
   await field(page, "Letter").fill("F")
   await expect(node(page, "F1")).toBeVisible()
-  await expect(node(page, "X1")).toHaveCount(0)
+  await expect(node(page, "E1")).toHaveCount(0)
   await expect(field(page, "F3")).toHaveValue("Go back to F1")
   await expect(arrow(page, "A1")).toHaveText("[Start ⇒ F1]")
   await expect(field(page, "A1")).toHaveValue("Initial assertion")
+  await expect(errors(page)).toHaveCount(0)
+})
+
+/* Typing a new letter means clearing the old one first. In between, the steps
+   keep the old letter, so the new one still renames what refers to them. */
+test("keeps the old letter while the box is cleared for a new one", async ({ page }) => {
+  await page.goto(PAGE)
+
+  const letter = field(page, "Letter")
+  await letter.click()
+  await letter.press("End")
+  await letter.press("Backspace")
+  await expect(letter).toHaveValue("")
+  await expect(node(page, "E1")).toBeVisible()
+  await expect(field(page, "E3")).toHaveValue("Go back to E1")
+
+  await letter.pressSequentially("F")
+  await expect(node(page, "F1")).toBeVisible()
+  await expect(field(page, "F3")).toHaveValue("Go back to F1")
   await expect(errors(page)).toHaveCount(0)
 })
 
@@ -125,28 +144,28 @@ test("refuses a letter the assertions already use", async ({ page }) => {
   await field(page, "Letter").fill("A")
   await expect(errors(page)).toHaveText(["Algorithm A would share its labels with the assertions."])
   /* The diagram stays drawn under the letter it had. */
-  await expect(node(page, "X1")).toBeVisible()
+  await expect(node(page, "E1")).toBeVisible()
 })
 
 test("gives a new step's arrow an assertion of its own", async ({ page }) => {
   await page.goto(PAGE)
 
   await tool(page).getByRole("button", { name: "Add step" }).click()
-  await field(page, "X4").fill("Terminate.")
-  await expect(arrow(page, "A6")).toHaveText("[X4 ⇒ End]")
+  await field(page, "E4").fill("Terminate.")
+  await expect(arrow(page, "A6")).toHaveText("[E4 ⇒ End]")
   await field(page, "A6").fill("done")
 
-  await expect(node(page, "X4")).toBeVisible()
+  await expect(node(page, "E4")).toBeVisible()
   await expect(node(page, "A6")).toBeVisible()
 })
 
 test("redraws the arrows, and their assertions, when a step is removed", async ({ page }) => {
   await page.goto(PAGE)
 
-  await tool(page).getByRole("button", { name: "Remove X3" }).click()
-  await expect(field(page, "X3")).toHaveCount(0)
-  /* X2's other arm now falls through to End, a new arrow with nothing said on it. */
-  await expect(arrow(page, "A4")).toHaveText("[X2 ⇒ End]")
+  await tool(page).getByRole("button", { name: "Remove E3" }).click()
+  await expect(field(page, "E3")).toHaveCount(0)
+  /* E2's other arm now falls through to End, a new arrow with nothing said on it. */
+  await expect(arrow(page, "A4")).toHaveText("[E2 ⇒ End]")
   await expect(field(page, "A4")).toHaveValue("")
   await expect(field(page, "A5")).toHaveCount(0)
   await expect(errors(page)).toHaveCount(0)
@@ -155,8 +174,8 @@ test("redraws the arrows, and their assertions, when a step is removed", async (
 test("says when a step goes to one that does not exist", async ({ page }) => {
   await page.goto(PAGE)
 
-  await field(page, "X3").fill("Go back to X9")
-  await expect(errors(page)).toHaveText(["X3 goes to X9, which is not a step."])
+  await field(page, "E3").fill("Go back to E9")
+  await expect(errors(page)).toHaveText(["E3 goes to E9, which is not a step."])
 })
 
 /* Mermaid draws its triangles as tall as they are wide with the label where
@@ -181,7 +200,7 @@ test("draws Start and End as triangles that fit their labels", async ({ page }) 
       .locator("g.label span")
       .first()
       .evaluate((span) => getComputedStyle(span).fontSize)
-    const stepSize = await node(page, "X1")
+    const stepSize = await node(page, "E1")
       .locator("g.label span")
       .first()
       .evaluate((span) => getComputedStyle(span).fontSize)

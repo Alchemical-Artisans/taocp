@@ -41,7 +41,7 @@
 
   /* The author's own sketch of the input: the steps as laid out in 1.1, and
      what holds on each arrow, read from Start and then out of each step in turn. */
-  const openingSteps = ["something", "If condition, terminate", "Go back to X1"]
+  const openingSteps = ["something", "If condition, terminate", "Go back to E1"]
   const openingAssertions = [
     "Initial assertion",
     "something",
@@ -141,8 +141,8 @@
 
 <p>
   To help you explore Assertions within diagrams more extensively, here is a tool to assist you in
-  creating them and labelling assertions. Connect to other steps by mentioning their label (e.g. X1,
-  X2, etc.). To branch, state "If condition, whatever." The word "terminate" signals the end of the
+  creating them and labelling assertions. Connect to other steps by mentioning their label (e.g. E1,
+  E2, etc.). To branch, state "If condition, whatever." The word "terminate" signals the end of the
   algorithm. If you hover over or click a step in the diagram, it will show what's needed to prove
   that step.
 </p>

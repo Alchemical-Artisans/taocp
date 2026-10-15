@@ -114,9 +114,14 @@ describe("build", () => {
     expect(build("X", steps("Go to X7.")).errors).toEqual(["X1 goes to X7, which is not a step."])
   })
 
-  it("falls back to X while the letter cannot be used", () => {
-    const flow = build("", steps("Terminate."))
-    expect(flow.letter).toBe("X")
+  it("letters the steps E unless told otherwise", () => {
+    expect(build("E", steps("Terminate.")).steps[0].id).toBe("E1")
+    expect(build("", steps("Terminate.")).letter).toBe("E")
+  })
+
+  it("keeps the last usable letter while the letter cannot be used", () => {
+    const flow = build("", steps("Terminate."), {}, "F")
+    expect(flow.letter).toBe("F")
     expect(flow.errors).toEqual(["The algorithm's letter must be a single letter."])
   })
 })

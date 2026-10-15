@@ -14,7 +14,7 @@ export const START = "Start"
 export const END = "End"
 
 /** The letter an algorithm is given until the reader picks another. */
-export const DEFAULT_LETTER = "X"
+export const DEFAULT_LETTER = "E"
 
 /** Assertions are A1, A2, …, so an algorithm cannot also be lettered A. */
 const ASSERTION_LETTER = "A"
@@ -76,16 +76,21 @@ export function letterError(letter: string): string | null {
  * The algorithm the steps make, with an assertion on every arrow: A1 on the
  * arrow from Start, then each step's arrows out in turn. `said` holds what the
  * reader has written about each, by its key.
+ *
+ * While the letter cannot be used — mid-edit, say — the steps keep `fallback`,
+ * the last letter that could, so they are not renamed out from under the
+ * references to them in the steps' own text.
  */
 export function build(
   letter: string,
   inputs: StepInput[],
   said: Record<string, string> = {},
+  fallback: string = DEFAULT_LETTER,
 ): Flow {
   const errors: string[] = []
   const invalid = letterError(letter)
   if (invalid) errors.push(invalid)
-  const name = invalid ? DEFAULT_LETTER : letter.trim().toUpperCase()
+  const name = invalid ? fallback : letter.trim().toUpperCase()
 
   const steps = inputs.map((input, i) => ({ id: `${name}${i + 1}`, ...titled(input.text.trim()) }))
   const keyOf = new Map<string, string>([

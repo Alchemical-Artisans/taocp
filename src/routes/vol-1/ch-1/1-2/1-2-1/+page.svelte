@@ -49,11 +49,12 @@
   ]
 
   const openingAssertions = [
-    "Initial assertion",
-    "something",
-    "Final assertion",
-    "something",
-    "something",
+    "$m > 0$, $n > 0$.",
+    "$c = m > 0$, $d = n > 0$,\n$a = b' = 0$, $a' = b = 1$.",
+    "$am + bn = d$, $a'm + b'n = c = qd + r$,\n$0 \\leq r < d$, $\\text{gcd}(c, d) = \\text{gcd}(m, n)$.",
+    "$am + bn = d = \\text{gcd}(m, n)$.",
+    "$am + bn = d$, $a'm + b'n = c = qd + r$,\n$0 < r < d$, $\\text{gcd}(c, d) = \\text{gcd}(m, n)$.",
+    "$am + bn = d$, $a'm + b'n = c$, $d > 0$, $\\text{gcd}(c, d) = \\text{gcd}(m , n)$",
   ]
 
   /** `a \cdot m + b \cdot n = d`, a negative coefficient written as a subtraction. */

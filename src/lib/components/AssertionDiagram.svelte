@@ -513,6 +513,13 @@
   /* Each label here is a single expression, its prose set as text, so it needs
      none of the room Mermaid.svelte gives maths beside prose; Mermaid does not
      count that room when sizing the box, so it would clip the label. */
+  /* Mermaid sizes a label's frame from a measurement that can come up a few
+     pixels short of the typeset maths; showing the overflow costs nothing,
+     as the box around it has padding to spare. */
+  .diagram :global(.mermaid foreignObject) {
+    overflow: visible;
+  }
+
   .diagram :global(.mermaid .nodeLabel .katex),
   .diagram :global(.mermaid .edgeLabel .katex) {
     margin: 0;
@@ -520,6 +527,18 @@
 
   .diagram :global(g.node) {
     cursor: pointer;
+  }
+
+  /* Assertions are bare text. !important because Mermaid styles its nodes from
+     a stylesheet keyed on the render's id, which outranks anything here. Lit,
+     they take the outline every other lit node does. */
+  .diagram :global(g.node.bare rect) {
+    fill: none !important;
+    stroke: none !important;
+  }
+  .diagram :global(g.node.bare.lit rect) {
+    stroke: var(--accent) !important;
+    stroke-width: 3px !important;
   }
 
   /* Drawn in the diagram's own line colour, under the same rules as its edges:

@@ -291,10 +291,13 @@ export function chart(flow: Flow): string {
   if (flow.assertions.length) {
     lines.push(`  subgraph assertions["Assertions"]`)
     lines.push("    direction TB")
+    /* Plain boxes, classed `bare` for the page to take their box away, rather
+       than Mermaid's text shape: that is written as `@{ … }`, which ends at
+       the first `}`, and every assertion with maths in it has braces in its
+       label. */
     for (const assertion of flow.assertions) {
-      lines.push(
-        `    ${assertion.id}@{ shape: text, label: ${shapeLabel(assertion.text ? `${assertion.id}. ${assertion.text}` : assertion.id)} }`,
-      )
+      const text = assertion.text ? `${assertion.id}. ${assertion.text}` : assertion.id
+      lines.push(`    ${assertion.id}["${label(text)}"]:::bare`)
     }
     /* Unlinked, the assertions would share one rank and sit in a row; chained
        invisibly they stand in a column, in the order they were written. */
@@ -340,15 +343,4 @@ function label(text: string): string {
   const rows = lines.map(mixedTex)
   const tex = rows.length > 1 ? `\\begin{array}{c} ${rows.join(" \\cr ")} \\end{array}` : rows[0]
   return `$$${tex.replace(/</g, "\\lt ").replace(/>/g, "\\gt ").replace(/"/g, "#quot;")}$$`
-}
-
-/**
- * A label inside `@{ … }`, which Mermaid reads as YAML: a double-quoted string
- * there treats `\gcd` as an escape and rejects it, while a single-quoted one
- * keeps backslashes as they are and only needs its own quote doubled.
- */
-function shapeLabel(text: string): string {
-  return `'${label(text)
-    .replace(/#quot;/g, '"')
-    .replace(/'/g, "''")}'`
 }

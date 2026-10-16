@@ -174,9 +174,9 @@ describe("chart", () => {
     expect(source).toContain("minNodeWidth: 0")
     expect(source).toContain("forceLegacyMathML: true")
     expect(source).toContain('X1["X1. something"]')
-    expect(source).toContain("A1@{ shape: text, label: 'A1. Initial assertion' }")
+    expect(source).toContain('A1["A1. Initial assertion"]:::bare')
     /* Nothing said yet: the assertion is still drawn, by its name alone. */
-    expect(source).toContain("A2@{ shape: text, label: 'A2' }")
+    expect(source).toContain('A2["A2"]:::bare')
   })
 
   /* A node linked out of its subgraph makes Mermaid drop the subgraph's
@@ -187,7 +187,7 @@ describe("chart", () => {
 
   it("sets a label with maths in it as one expression, its prose as text", () => {
     expect(chart(build("X", steps("Terminate."), { "start>0": "$0 < r$" }))).toContain(
-      "label: '$$\\text{A1. }0 \\lt  r$$'",
+      'A1["$$\\text{A1. }0 \\lt  r$$"]:::bare',
     )
   })
 

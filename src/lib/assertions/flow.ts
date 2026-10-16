@@ -113,7 +113,7 @@ export function build(
 
 /** Knuth names a step in brackets before saying what it does: `[Divide.] …`. */
 function titled(text: string): { title: string | null; body: string } {
-  const named = text.match(/^\[([^\]]*)\]\s*(.*)$/)
+  const named = text.match(/^\[([^\]]*)\]\s*([\s\S]*)$/)
   if (!named) return { title: null, body: text }
   return { title: named[1].trim(), body: named[2].trim() }
 }
@@ -263,7 +263,18 @@ function escapeText(text: string): string {
  * `links` lists them for drawing over it once Mermaid has laid it out.
  */
 export function chart(flow: Flow): string {
-  const lines = ["---", "config:", "  flowchart:", "    minNodeWidth: 0", "---", "flowchart LR"]
+  /* KaTeX's own rendering rather than the browser's MathML, so the maths is
+     set as it is everywhere else on the site; MathML draws a prime detached
+     from its letter. */
+  const lines = [
+    "---",
+    "config:",
+    "  forceLegacyMathML: true",
+    "  flowchart:",
+    "    minNodeWidth: 0",
+    "---",
+    "flowchart LR",
+  ]
 
   lines.push(`  subgraph algorithm["Algorithm ${flow.letter}"]`)
   lines.push("    direction TB")
@@ -312,17 +323,23 @@ export function links(flow: Flow): Link[] {
 }
 
 /**
- * Text as a quoted Mermaid label. Mermaid typesets `$$…$$`, so the reader's
- * `$…$` is doubled; a quote would close the label, so it becomes an entity.
- * Mermaid escapes `<` and `>` before KaTeX sees them, so inside the maths they
- * become the commands that draw them.
+ * Text as a quoted Mermaid label; a quote would close it, so it becomes an
+ * entity.
+ *
+ * A label with maths in it is handed to Mermaid as one expression, its prose
+ * set as text and each of its lines a row of an array. Mermaid would otherwise
+ * typeset each `$…$` on its own and set them all on one line, dropping the
+ * reader's line breaks and measuring the line too short for what is in it.
+ * Mermaid escapes `<` and `>` before KaTeX sees them, so in the maths they
+ * become the commands that draw them; it also reads `\\\\` as an escaped
+ * backslash, so rows end in `\\cr`.
  */
 function label(text: string): string {
-  return text
-    .replace(/"/g, "#quot;")
-    .replace(/(?<![\\$])\$(?!\$)((?:\\\$|[^$])+?)(?<!\\)\$(?!\$)/g, (_, math: string) => {
-      return `$$${math.replace(/</g, "\\lt ").replace(/>/g, "\\gt ")}$$`
-    })
+  const lines = text.split("\n")
+  if (!/(?<!\\)\$/.test(text)) return lines.join("<br>").replace(/"/g, "#quot;")
+  const rows = lines.map(mixedTex)
+  const tex = rows.length > 1 ? `\\begin{array}{c} ${rows.join(" \\cr ")} \\end{array}` : rows[0]
+  return `$$${tex.replace(/</g, "\\lt ").replace(/>/g, "\\gt ").replace(/"/g, "#quot;")}$$`
 }
 
 /**

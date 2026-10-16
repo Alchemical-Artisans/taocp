@@ -82,6 +82,23 @@
     for (const step of steps) step.text = step.text.replace(reference, `${after}$1`)
   }
 
+  /**
+   * Hold a box open to exactly what it holds, as the formula tool does, so a
+   * step written over several lines reads without scrolling inside a frame one
+   * line tall. Takes the text so it runs again whenever the text changes,
+   * including when a change of letter rewrites it.
+   */
+  function fit(text: string) {
+    return (node: HTMLTextAreaElement) => {
+      void text
+      node.style.height = "auto"
+      /* `scrollHeight` leaves out the border, which `border-box` counts. */
+      const style = getComputedStyle(node)
+      const border = parseFloat(style.borderTopWidth) + parseFloat(style.borderBottomWidth)
+      node.style.height = `${node.scrollHeight + border}px`
+    }
+  }
+
   function addStep() {
     steps.push({ key: nextKey++, text: "" })
   }
@@ -303,16 +320,16 @@
     <li class="assertion">
       <span class="name mono">{assertion.id}</span>
       <span class="arrow mono">[{assertion.from} &rArr; {assertion.to}]</span>
-      <input
+      <textarea
         class="text mono"
-        type="text"
+        rows="1"
         spellcheck="false"
         autocapitalize="off"
         autocomplete="off"
         aria-label={assertion.id}
         value={said[assertion.key] ?? ""}
         oninput={(event) => (said[assertion.key] = event.currentTarget.value)}
-      />
+        {@attach fit(said[assertion.key] ?? "")}></textarea>
     </li>
   {/snippet}
 
@@ -324,15 +341,15 @@
       {@const name = flow.steps[index].id}
       <li>
         <span class="name mono">{name}.</span>
-        <input
+        <textarea
           class="text mono"
-          type="text"
+          rows="1"
           spellcheck="false"
           autocapitalize="off"
           autocomplete="off"
           aria-label={name}
           bind:value={step.text}
-        />
+          {@attach fit(step.text)}></textarea>
         <button
           type="button"
           class="tool-button"
@@ -414,10 +431,12 @@
 
   /* One line a row: the label in a fixed column so the inputs line up, the
      arrow an assertion sits on, then what it says. */
+  /* Aligned to the top, so a label stays beside the first line of a box that
+     has grown over several. */
   .rows li {
     display: flex;
     flex-wrap: wrap;
-    align-items: center;
+    align-items: baseline;
     gap: 0.4rem;
     margin-bottom: 0.4em;
   }
@@ -446,9 +465,13 @@
     flex: 0 0 2.1rem;
   }
 
+  /* Grown to its content by `fit`, so it never scrolls inside itself and never
+     offers a resize handle that would fight the measurement. */
   .text {
     flex: 1 1 16rem;
     min-width: 0;
+    resize: none;
+    overflow: hidden;
   }
 
   .controls {
@@ -485,6 +508,14 @@
 
   .diagram {
     position: relative;
+  }
+
+  /* Each label here is a single expression, its prose set as text, so it needs
+     none of the room Mermaid.svelte gives maths beside prose; Mermaid does not
+     count that room when sizing the box, so it would clip the label. */
+  .diagram :global(.mermaid .nodeLabel .katex),
+  .diagram :global(.mermaid .edgeLabel .katex) {
+    margin: 0;
   }
 
   .diagram :global(g.node) {

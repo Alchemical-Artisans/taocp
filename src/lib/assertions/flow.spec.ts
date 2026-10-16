@@ -172,6 +172,7 @@ describe("chart", () => {
     expect(source).toMatch(/Start@\{ shape: flip-tri/)
     expect(source).toMatch(/End@\{ shape: tri/)
     expect(source).toContain("minNodeWidth: 0")
+    expect(source).toContain("forceLegacyMathML: true")
     expect(source).toContain('X1["X1. something"]')
     expect(source).toContain("A1@{ shape: text, label: 'A1. Initial assertion' }")
     /* Nothing said yet: the assertion is still drawn, by its name alone. */
@@ -184,10 +185,26 @@ describe("chart", () => {
     expect(source).not.toMatch(/X\d+ -\.?-?> A\d+|A\d+ -\.?-?> X\d+/)
   })
 
-  it("doubles the reader's dollars and draws < with a command", () => {
+  it("sets a label with maths in it as one expression, its prose as text", () => {
     expect(chart(build("X", steps("Terminate."), { "start>0": "$0 < r$" }))).toContain(
-      "label: 'A1. $$0 \\lt  r$$'",
+      "label: '$$\\text{A1. }0 \\lt  r$$'",
     )
+  })
+
+  it("keeps the reader's line breaks, as rows of an array where there is maths", () => {
+    const source = chart(build("X", steps("$q \\gets c$\nthen $r \\gets d$", "Go on\nand stop.")))
+    expect(source).toContain(
+      'X1["$$\\begin{array}{c} \\text{X1. }q \\gets c \\cr \\text{then }r \\gets d \\end{array}$$"]',
+    )
+    expect(source).toContain('X2["X2. Go on<br>and stop."]')
+  })
+
+  it("names a step from a bracketed title even when its body runs over lines", () => {
+    expect(build("X", steps("[Divide.] Let $q$\nbe the quotient.")).steps[0]).toEqual({
+      id: "X1",
+      title: "Divide.",
+      body: "Let $q$\nbe the quotient.",
+    })
   })
 })
 

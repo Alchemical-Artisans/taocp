@@ -41,7 +41,13 @@
 
   /* The author's own sketch of the input: the steps as laid out in 1.1, and
      what holds on each arrow, read from Start and then out of each step in turn. */
-  const openingSteps = ["something", "If condition, terminate", "Go back to E1"]
+ const openingSteps = [
+   "$a \\leftarrow 0$ $a' \\leftarrow 1$ $c \\leftarrow m$\n$b \\leftarrow 1$ $b' \\leftarrow 0$ $d \\leftarrow n$",
+   "$q \\leftarrow \\text{quotient}(c / d)$\n$r \\leftarrow \\text{remainder}(c / d)$",
+   "If r = 0, terminate.",
+   "$c \\leftarrow d$, $d \\leftarrow r$;\n$t \\leftarrow a'$, $a' \\leftarrow a$, $a \leftarrow t - qa$;\n$t \\leftarrow b'$, $b' \\leftarrow b$, $b \\leftarrow t - qb$.\n Go back to E2.",
+ ]
+
   const openingAssertions = [
     "Initial assertion",
     "something",
